@@ -8,8 +8,8 @@ interface TopNavProps {
 
 export default function TopNav({ title, subtitle }: TopNavProps) {
   return (
-    <header className="sticky top-0 z-30 bg-ivory/80 backdrop-blur-lg border-b border-lilac/40">
-      <div className="flex items-center justify-between px-8 py-4">
+    <header className="sticky top-0 z-30 bg-ivory/80 backdrop-blur-lg border-b border-lilac/40 w-full">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-4">
         {/* Page Title */}
         <div>
           <h1 className="text-2xl font-bold text-charcoal">{title}</h1>

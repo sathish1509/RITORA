@@ -67,7 +67,7 @@ export default function DashboardPage() {
     <div className="min-h-screen">
       <TopNav title={`${getGreeting()}, ${mockUser.name}`} subtitle="Here's your health overview for today" />
 
-      <div className="p-8 stagger-children">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto stagger-children">
         {/* Stats Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
           {/* Current Cycle */}
