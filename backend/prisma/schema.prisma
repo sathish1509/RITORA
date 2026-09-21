@@ -1,0 +1,134 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                    String           @id @default(cuid())
+  email                 String           @unique
+  passwordHash          String
+  name                  String
+  age                   Int?             @default(24)
+  avatarUrl             String?
+  averageCycleLength    Int              @default(29)
+  averagePeriodDuration Int              @default(5)
+  lastPeriodStart       String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  cycles                Cycle[]
+  symptoms              Symptom[]
+  lifestyleEntries      LifestyleEntry[]
+  insights              HealthInsight[]
+  riskIndicators        RiskIndicator[]
+  predictions           Prediction[]
+  reports               Report[]
+  chatMessages          ChatMessage[]
+}
+
+model Cycle {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate      String         // YYYY-MM-DD
+  endDate        String?        // YYYY-MM-DD
+  cycleLength    Int?
+  periodDuration Int?           @default(5)
+  flow           String?        // JSON array: ["medium", "heavy", ...]
+  isActive       Boolean        @default(false)
+  isRegular      Boolean        @default(true)
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  symptoms       Symptom[]
+}
+
+model Symptom {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cycleId   String?
+  cycle     Cycle?      @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  type      String      // cramps, fatigue, bloating, headache, mood-swings, breast-tenderness, acne, nausea, back-pain, insomnia, anxiety, cravings
+  severity  Int         // 1 to 5
+  date      String      // YYYY-MM-DD
+  notes     String?
+  createdAt DateTime    @default(now())
+}
+
+model LifestyleEntry {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String      // YYYY-MM-DD
+  sleep     Float       // hours (e.g. 5.5)
+  stress    String      // low, moderate, high, very-high
+  hydration Float       // liters (e.g. 1.5)
+  exercise  Int         // minutes (e.g. 20)
+  mood      String      // great, good, okay, low, bad
+  notes     String?
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, date])
+}
+
+model HealthInsight {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  severity       String   // info, warning, alert
+  category       String   // pattern-change, lifestyle-correlation, symptom-trend, cycle-prediction, health-awareness
+  icon           String?  // alert-triangle, moon, brain, battery-low, droplets
+  actionableStep String?
+  createdAt      DateTime @default(now())
+}
+
+model RiskIndicator {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // Anemia Risk, Stress-Related Cycle Disruption
+  level       String   // low, moderate, high
+  explanation String
+  disclaimer  String   @default("This is an awareness indicator, not a medical diagnosis. Please consult a healthcare provider for proper evaluation.")
+  createdAt   DateTime @default(now())
+}
+
+model Prediction {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictedDate        String   // YYYY-MM-DD
+  confidence           Int      // 0 - 100
+  basedOn              String
+  estimatedWindowStart String?  // YYYY-MM-DD
+  estimatedWindowEnd   String?  // YYYY-MM-DD
+  createdAt            DateTime @default(now())
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  type        String   // monthly, quarterly, annual, custom
+  summary     String
+  dataJson    String   // JSON stringified: { cycleCount, averageCycleLength, longestCycle, shortestCycle, commonSymptoms, lifestyleAverages }
+  generatedAt DateTime @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // user, assistant
+  content   String
+  createdAt DateTime @default(now())
+}

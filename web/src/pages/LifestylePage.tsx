@@ -34,7 +34,7 @@ export default function LifestylePage() {
     <div className="min-h-screen">
       <TopNav title="Lifestyle" subtitle="Track daily habits that impact your health" />
 
-      <div className="p-8">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
         {/* Log Button */}
         <button
           onClick={() => setShowModal(true)}

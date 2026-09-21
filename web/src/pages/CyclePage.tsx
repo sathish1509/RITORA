@@ -41,7 +41,7 @@ export default function CyclePage() {
     <div className="min-h-screen">
       <TopNav title="Cycle Tracking" subtitle="Monitor your menstrual cycle patterns" />
 
-      <div className="p-8">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Calendar */}
           <div className="xl:col-span-2 bg-white rounded-2xl border border-lilac/30 p-6 animate-fade-in">

@@ -55,7 +55,7 @@ export default function SymptomsPage() {
     <div className="min-h-screen">
       <TopNav title="Symptoms" subtitle="Track and monitor your symptoms" />
 
-      <div className="p-8">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
         {/* Log Button */}
         <button
           onClick={() => setShowModal(true)}

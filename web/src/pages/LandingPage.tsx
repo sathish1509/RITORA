@@ -3,12 +3,12 @@ import { ArrowRight, Shield, Brain, TrendingUp, Heart, Sparkles, Activity } from
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#FAF8F4]">
+    <div className="min-h-screen bg-[#FAF8F4] overflow-x-hidden">
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-[#FAF8F4]/80 backdrop-blur-lg border-b border-[#EDE4F5]">
+      <nav className="fixed top-0 left-0 right-0 w-full z-50 bg-[#FAF8F4]/90 backdrop-blur-lg border-b border-[#EDE4F5]">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#4A245E] to-[#6B3A80] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#4A245E] to-[#6B3A80] flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-sm">R</span>
             </div>
             <span className="text-xl font-bold text-[#24212A]">RITORA</span>
@@ -28,14 +28,14 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-16 px-6">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="pt-32 pb-16 sm:pt-40 sm:pb-24 px-6">
+        <div className="max-w-5xl mx-auto text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#EDE4F5] text-[#4A245E] text-xs font-semibold mb-6">
             <Sparkles className="w-3.5 h-3.5" />
             AI-Powered Menstrual Health Intelligence
           </div>
 
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#24212A] tracking-tight leading-[1.15] mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-[#24212A] tracking-tight leading-[1.15] mb-6">
             Understand Your{' '}
             <span className="bg-gradient-to-r from-[#4A245E] to-[#B89AD9] bg-clip-text text-transparent">Rhythm</span>.
             <br />
@@ -43,7 +43,7 @@ export default function LandingPage() {
             <span className="bg-gradient-to-r from-[#9B7BC0] to-[#8FB39A] bg-clip-text text-transparent">Health</span>.
           </h1>
 
-          <p className="text-base sm:text-lg text-[#24212A]/70 max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p className="text-base sm:text-lg text-[#24212A]/70 max-w-2xl mx-auto mb-10 leading-relaxed">
             RITORA goes beyond simple tracking. Our AI analyzes your cycle patterns, lifestyle factors, and symptoms
             to provide personalized health intelligence — helping you take proactive control of your well-being.
           </p>
@@ -58,14 +58,14 @@ export default function LandingPage() {
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-white border border-[#EDE4F5] text-[#24212A] font-semibold hover:border-[#B89AD9] transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-white border border-[#EDE4F5] text-[#24212A] font-semibold hover:border-[#B89AD9] transition-colors shadow-sm"
             >
               Sign In
             </Link>
           </div>
 
           {/* Hero Visual */}
-          <div className="relative max-w-3xl mx-auto">
+          <div className="relative w-full max-w-3xl mx-auto">
             <div className="absolute -inset-2 bg-gradient-to-r from-[#4A245E]/10 via-[#B89AD9]/15 to-[#A8C3B0]/15 rounded-3xl blur-xl" />
             <div className="relative bg-white rounded-2xl shadow-xl border border-[#EDE4F5] p-6 sm:p-8">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
@@ -91,16 +91,16 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 sm:py-24 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-[#24212A] text-center mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#24212A] text-center mb-4">
             Intelligence, Not Just Tracking
           </h2>
-          <p className="text-center text-[#24212A]/60 mb-14 max-w-xl mx-auto">
+          <p className="text-center text-[#24212A]/60 mb-14 max-w-xl mx-auto leading-relaxed">
             RITORA combines cycle data, lifestyle patterns, and symptom trends to deliver insights that matter.
           </p>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 icon: Brain,
@@ -161,13 +161,13 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-6">
+      <section className="py-20 sm:py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-[#4A245E] via-[#6B3A80] to-[#B89AD9] rounded-3xl p-12 shadow-2xl shadow-[#4A245E]/20">
-            <h2 className="text-3xl font-bold text-white mb-4">
+          <div className="bg-gradient-to-r from-[#4A245E] via-[#6B3A80] to-[#B89AD9] rounded-3xl p-8 sm:p-12 shadow-2xl shadow-[#4A245E]/20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
               Ready to Understand Your Health Better?
             </h2>
-            <p className="text-[#EDE4F5] mb-8">
+            <p className="text-[#EDE4F5] mb-8 max-w-xl mx-auto leading-relaxed">
               Join RITORA and start your personalized health intelligence journey today.
             </p>
             <Link
@@ -182,15 +182,15 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#EDE4F5] py-8 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <footer className="border-t border-[#EDE4F5] py-8 px-6 bg-[#FAF8F4]">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-gradient-to-r from-[#4A245E] to-[#6B3A80] flex items-center justify-center">
               <span className="text-white font-bold text-xs">R</span>
             </div>
             <span className="text-sm font-semibold text-[#24212A]/70">RITORA</span>
           </div>
-          <p className="text-xs text-[#24212A]/40">
+          <p className="text-xs text-[#24212A]/40 text-center sm:text-right">
             © 2026 RITORA. AI-Powered Menstrual Health Intelligence.
           </p>
         </div>

@@ -17,7 +17,7 @@ export default function InsightsPage() {
     <div className="min-h-screen">
       <TopNav title="Health Insights" subtitle="AI-powered analysis of your health patterns" />
 
-      <div className="p-8 stagger-children">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto stagger-children">
         {/* Main Insight Hero */}
         <div className="bg-gradient-to-r from-plum to-plum-light rounded-2xl p-8 text-white shadow-xl shadow-plum/20 mb-6">
           <div className="flex items-start gap-4">
