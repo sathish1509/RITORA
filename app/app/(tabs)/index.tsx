@@ -1,25 +1,76 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Colors } from '@/src/constants/theme';
+import { mobileHealthService } from '@/src/services';
 import {
   mockUser,
-  currentCycleDay,
+  currentCycleDay as fallbackCycleDay,
   mockInsights,
   mockRiskIndicators,
   mockPredictions,
 } from '@/src/data/mockData';
 
 export default function HomeScreen() {
-  const insight = mockInsights[0];
-  const risk = mockRiskIndicators[0];
-  const prediction = mockPredictions[0];
+  const [user, setUser] = useState(mockUser);
+  const [currentCycle, setCurrentCycle] = useState<any>(null);
+  const [insights, setInsights] = useState<any[]>(mockInsights);
+  const [riskIndicators, setRiskIndicators] = useState<any[]>(mockRiskIndicators);
+  const [predictions, setPredictions] = useState<any[]>(mockPredictions);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = async () => {
+    try {
+      await mobileHealthService.login();
+      const [u, cycle, ins, risks, preds] = await Promise.all([
+        mobileHealthService.getCurrentUser(),
+        mobileHealthService.getCurrentCycle(),
+        mobileHealthService.getInsights(),
+        mobileHealthService.getRiskIndicators(),
+        mobileHealthService.getPredictions(),
+      ]);
+      if (u) setUser(u);
+      if (cycle) setCurrentCycle(cycle);
+      if (ins?.length) setInsights(ins);
+      if (risks?.length) setRiskIndicators(risks);
+      if (preds?.length) setPredictions(preds);
+    } catch (err) {
+      console.warn('Failed to load mobile home data', err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  const currentCycleDayNumber = (() => {
+    if (!currentCycle?.startDate) return fallbackCycleDay;
+    const start = new Date(currentCycle.startDate);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
+    return Math.max(1, diff);
+  })();
+
+  const insight = insights[0] || mockInsights[0];
+  const risk = riskIndicators[0] || mockRiskIndicators[0];
+  const prediction = predictions[0] || mockPredictions[0];
+  const deviation = currentCycleDayNumber - (user.averageCycleLength || 28);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.plum} />}
+    >
       {/* Greeting */}
       <View style={styles.greetingHeader}>
         <Text style={styles.greetingSub}>Good morning,</Text>
-        <Text style={styles.greetingTitle}>{mockUser.name} 👋</Text>
+        <Text style={styles.greetingTitle}>{user.name} 👋</Text>
       </View>
 
       {/* Cycle Progress Card */}
@@ -33,13 +84,17 @@ export default function HomeScreen() {
 
         <View style={styles.cycleProgressRow}>
           <View style={styles.cycleCircle}>
-            <Text style={styles.cycleDayNumber}>{currentCycleDay}</Text>
+            <Text style={styles.cycleDayNumber}>{currentCycleDayNumber}</Text>
             <Text style={styles.cycleDayLabel}>DAY</Text>
           </View>
 
           <View style={styles.cycleInfo}>
-            <Text style={styles.cycleStatusText}>Cycle Delayed</Text>
-            <Text style={styles.cycleDeviationText}>+6 days from 29-day avg</Text>
+            <Text style={styles.cycleStatusText}>
+              {deviation >= 4 ? 'Cycle Delayed' : 'On Track'}
+            </Text>
+            <Text style={styles.cycleDeviationText}>
+              {deviation >= 0 ? `+${deviation} days from ${user.averageCycleLength}d avg` : `${deviation} days`}
+            </Text>
             <Text style={styles.cyclePredictionText}>
               Next period: ~{prediction.predictedDate} ({prediction.confidence}% confidence)
             </Text>

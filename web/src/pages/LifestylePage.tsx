@@ -1,12 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TopNav from '../components/layout/TopNav';
-import { mockLifestyle } from '../data/mockData';
+import { lifestyleService } from '../services/lifestyleService';
+import type { LifestyleEntry, StressLevel, MoodLevel } from '../types';
 import { Moon, Brain, Droplets, Dumbbell, Smile, Plus, X } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 export default function LifestylePage() {
   const [showModal, setShowModal] = useState(false);
-  const [entries] = useState(mockLifestyle);
+  const [entries, setEntries] = useState<LifestyleEntry[]>([]);
+  const [sleep, setSleep] = useState(7);
+  const [hydration, setHydration] = useState(2.2);
+  const [exercise, setExercise] = useState(30);
+  const [stress, setStress] = useState<StressLevel>('moderate');
+  const [mood, setMood] = useState<MoodLevel>('good');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadLifestyle();
+  }, []);
+
+  const loadLifestyle = async () => {
+    try {
+      const data = await lifestyleService.getLifestyle();
+      setEntries(data);
+    } catch (err) {
+      console.error('Failed to load lifestyle entries', err);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const newEntry = await lifestyleService.createLifestyleEntry({
+        date: new Date().toISOString().split('T')[0],
+        sleep: Number(sleep),
+        hydration: Number(hydration),
+        exercise: Number(exercise),
+        stress,
+        mood,
+        notes: notes.trim() || undefined,
+      });
+      setEntries((prev) => [newEntry, ...prev]);
+      setShowModal(false);
+    } catch (err) {
+      console.error('Failed to save lifestyle entry', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const chartData = entries.slice(0, 14).reverse().map((e) => ({
     date: new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -22,7 +64,7 @@ export default function LifestylePage() {
     'very-high': { color: 'text-red-600', bg: 'bg-red-50' },
   };
 
-  const moodMap: Record<string, string> = {
+  const moodMap: Record<MoodLevel, string> = {
     great: '😊',
     good: '🙂',
     okay: '😐',
@@ -32,7 +74,7 @@ export default function LifestylePage() {
 
   return (
     <div className="min-h-screen">
-      <TopNav title="Lifestyle" subtitle="Track daily habits that impact your health" />
+      <TopNav title="Lifestyle" subtitle="Track daily habits and correlated health patterns" />
 
       <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
         {/* Log Button */}
@@ -108,26 +150,53 @@ export default function LifestylePage() {
                 </button>
               </div>
               <div className="p-6 space-y-5">
-                {[
-                  { icon: Moon, label: 'Sleep (hours)', type: 'number', placeholder: '7', step: '0.5', min: '0', max: '24' },
-                  { icon: Droplets, label: 'Hydration (liters)', type: 'number', placeholder: '2.0', step: '0.1', min: '0', max: '10' },
-                  { icon: Dumbbell, label: 'Exercise (minutes)', type: 'number', placeholder: '30', step: '5', min: '0', max: '300' },
-                ].map((field) => (
-                  <div key={field.label}>
-                    <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-1.5">
-                      <field.icon className="w-4 h-4 text-plum" />
-                      {field.label}
-                    </label>
-                    <input
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      step={field.step}
-                      min={field.min}
-                      max={field.max}
-                      className="w-full px-4 py-3 rounded-xl bg-ivory border border-lilac/50 text-charcoal focus:outline-none focus:ring-2 focus:ring-lavender/50 transition-all"
-                    />
-                  </div>
-                ))}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-1.5">
+                    <Moon className="w-4 h-4 text-plum" />
+                    Sleep (hours)
+                  </label>
+                  <input
+                    type="number"
+                    value={sleep}
+                    onChange={(e) => setSleep(Number(e.target.value))}
+                    step="0.5"
+                    min="0"
+                    max="24"
+                    className="w-full px-4 py-3 rounded-xl bg-ivory border border-lilac/50 text-charcoal focus:outline-none focus:ring-2 focus:ring-lavender/50 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-1.5">
+                    <Droplets className="w-4 h-4 text-plum" />
+                    Hydration (liters)
+                  </label>
+                  <input
+                    type="number"
+                    value={hydration}
+                    onChange={(e) => setHydration(Number(e.target.value))}
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    className="w-full px-4 py-3 rounded-xl bg-ivory border border-lilac/50 text-charcoal focus:outline-none focus:ring-2 focus:ring-lavender/50 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-1.5">
+                    <Dumbbell className="w-4 h-4 text-plum" />
+                    Exercise (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={exercise}
+                    onChange={(e) => setExercise(Number(e.target.value))}
+                    step="5"
+                    min="0"
+                    max="300"
+                    className="w-full px-4 py-3 rounded-xl bg-ivory border border-lilac/50 text-charcoal focus:outline-none focus:ring-2 focus:ring-lavender/50 transition-all"
+                  />
+                </div>
 
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-charcoal mb-1.5">
@@ -135,9 +204,18 @@ export default function LifestylePage() {
                     Stress Level
                   </label>
                   <div className="grid grid-cols-4 gap-2">
-                    {['Low', 'Moderate', 'High', 'Very High'].map((s) => (
-                      <button key={s} className="py-2.5 rounded-xl border border-lilac/50 text-sm font-medium text-charcoal hover:border-plum hover:bg-plum/5 transition-all">
-                        {s}
+                    {(['low', 'moderate', 'high', 'very-high'] as StressLevel[]).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setStress(s)}
+                        className={`py-2.5 rounded-xl border text-sm font-medium capitalize transition-all ${
+                          stress === s
+                            ? 'border-plum bg-plum/10 text-plum font-bold shadow-sm'
+                            : 'border-lilac/50 text-charcoal hover:border-plum hover:bg-plum/5'
+                        }`}
+                      >
+                        {s.replace('-', ' ')}
                       </button>
                     ))}
                   </div>
@@ -149,20 +227,41 @@ export default function LifestylePage() {
                     Mood
                   </label>
                   <div className="grid grid-cols-5 gap-2">
-                    {Object.entries(moodMap).map(([mood, emoji]) => (
-                      <button key={mood} className="py-3 rounded-xl border border-lilac/50 text-center hover:border-plum hover:bg-plum/5 transition-all">
+                    {(Object.entries(moodMap) as [MoodLevel, string][]).map(([m, emoji]) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setMood(m)}
+                        className={`py-3 rounded-xl border text-center transition-all ${
+                          mood === m
+                            ? 'border-plum bg-plum/10 shadow-sm ring-1 ring-plum'
+                            : 'border-lilac/50 hover:border-plum hover:bg-plum/5'
+                        }`}
+                      >
                         <span className="text-xl block">{emoji}</span>
-                        <span className="text-[10px] text-charcoal/50 capitalize">{mood}</span>
+                        <span className="text-[10px] text-charcoal/60 capitalize font-medium">{m}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal/60 mb-1.5">Notes</label>
+                  <input
+                    type="text"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. Felt energized after walking"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-lilac/50 text-charcoal text-xs focus:outline-none focus:ring-2 focus:ring-lavender"
+                  />
+                </div>
+
                 <button
-                  onClick={() => setShowModal(false)}
-                  className="w-full py-3 rounded-xl gradient-plum text-white font-semibold hover:opacity-90 transition-opacity"
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="w-full py-3 rounded-xl gradient-plum text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  Save Entry
+                  {loading ? 'Saving...' : 'Save Entry'}
                 </button>
               </div>
             </div>

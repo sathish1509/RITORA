@@ -1,35 +1,50 @@
-import { delay } from './api';
+import { apiClient } from './api';
 import { mockCycles, currentCycle } from '../data/mockData';
 import type { Cycle } from '../types';
 
 export const cycleService = {
   async getCycles(): Promise<Cycle[]> {
-    await delay();
-    return mockCycles;
+    try {
+      const cycles = await apiClient.get<Cycle[]>('/cycles');
+      return cycles.length > 0 ? cycles : mockCycles;
+    } catch (err) {
+      console.warn('Using mock cycles fallback', err);
+      return mockCycles;
+    }
   },
 
   async getCurrentCycle(): Promise<Cycle> {
-    await delay();
-    return currentCycle;
+    try {
+      const cycle = await apiClient.get<Cycle>('/cycles/current');
+      return cycle || currentCycle;
+    } catch (err) {
+      console.warn('Using mock current cycle fallback', err);
+      return currentCycle;
+    }
   },
 
   async createCycle(data: Partial<Cycle>): Promise<Cycle> {
-    await delay(400);
-    return {
-      id: `cyc_${Date.now()}`,
-      startDate: data.startDate || new Date().toISOString().split('T')[0],
-      endDate: null,
-      cycleLength: null,
-      flow: [],
-      symptoms: [],
-      isActive: true,
-    };
+    try {
+      return await apiClient.post<Cycle>('/cycles', data);
+    } catch {
+      return {
+        id: `cyc_${Date.now()}`,
+        startDate: data.startDate || new Date().toISOString().split('T')[0],
+        endDate: null,
+        cycleLength: null,
+        flow: data.flow || ['medium'],
+        symptoms: [],
+        isActive: true,
+      };
+    }
   },
 
-  async endCycle(cycleId: string): Promise<Cycle> {
-    await delay(400);
-    const cycle = mockCycles.find((c) => c.id === cycleId);
-    if (!cycle) throw new Error('Cycle not found');
-    return { ...cycle, isActive: false, endDate: new Date().toISOString().split('T')[0] };
+  async endCycle(cycleId: string, endDate?: string): Promise<Cycle> {
+    try {
+      return await apiClient.put<Cycle>(`/cycles/${cycleId}/end`, { endDate });
+    } catch {
+      const cycle = mockCycles.find((c) => c.id === cycleId) || currentCycle;
+      return { ...cycle, isActive: false, endDate: endDate || new Date().toISOString().split('T')[0] };
+    }
   },
 };

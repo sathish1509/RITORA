@@ -1,27 +1,70 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, RefreshControl } from 'react-native';
 import { Colors } from '@/src/constants/theme';
-import { mockCycles, mockUser, currentCycleDay } from '@/src/data/mockData';
+import { mobileHealthService } from '@/src/services';
+import { mockCycles, mockUser, currentCycleDay as fallbackCycleDay } from '@/src/data/mockData';
 
 export default function CycleScreen() {
+  const [cycles, setCycles] = useState<any[]>(mockCycles);
+  const [currentCycle, setCurrentCycle] = useState<any>(null);
+  const [user, setUser] = useState<any>(mockUser);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadCycles = async () => {
+    try {
+      const [fetchedCycles, activeCycle, currentUser] = await Promise.all([
+        mobileHealthService.getCycles(),
+        mobileHealthService.getCurrentCycle(),
+        mobileHealthService.getCurrentUser(),
+      ]);
+      if (fetchedCycles?.length) setCycles(fetchedCycles);
+      if (activeCycle) setCurrentCycle(activeCycle);
+      if (currentUser) setUser(currentUser);
+    } catch (err) {
+      console.warn('Failed to load mobile cycle data', err);
+    }
+  };
+
+  useEffect(() => {
+    loadCycles();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadCycles();
+    setRefreshing(false);
+  };
+
+  const currentCycleDayNumber = (() => {
+    if (!currentCycle?.startDate) return fallbackCycleDay;
+    const start = new Date(currentCycle.startDate);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
+    return Math.max(1, diff);
+  })();
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.plum} />}
+    >
       {/* Overview Card */}
       <View style={styles.summaryCard}>
         <Text style={styles.cardTitle}>Cycle Overview</Text>
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{currentCycleDay}</Text>
+            <Text style={styles.statNumber}>{currentCycleDayNumber}</Text>
             <Text style={styles.statLabel}>Current Day</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{mockUser.averageCycleLength}d</Text>
+            <Text style={styles.statNumber}>{user.averageCycleLength || 28}d</Text>
             <Text style={styles.statLabel}>Avg Length</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{mockUser.averagePeriodLength}d</Text>
+            <Text style={styles.statNumber}>{user.averagePeriodLength || user.averagePeriodDuration || 5}d</Text>
             <Text style={styles.statLabel}>Avg Period</Text>
           </View>
         </View>
@@ -31,20 +74,20 @@ export default function CycleScreen() {
       <Text style={styles.sectionHeader}>Cycle History</Text>
 
       {/* Cycle Items */}
-      {mockCycles.map((cycle) => (
+      {cycles.map((cycle) => (
         <View key={cycle.id} style={styles.historyCard}>
           <View style={styles.historyCardHeader}>
-            <Text style={styles.historyDate}>Started {cycle.startDate}</Text>
-            <View style={[styles.statusTag, cycle.isRegular ? styles.regularTag : styles.irregularTag]}>
-              <Text style={[styles.statusTagText, cycle.isRegular ? styles.regularTagText : styles.irregularTagText]}>
-                {cycle.isRegular ? 'Regular' : 'Irregular / Delayed'}
+            <Text style={styles.historyDate}>Started {new Date(cycle.startDate).toLocaleDateString()}</Text>
+            <View style={[styles.statusTag, cycle.cycleLength && Math.abs(cycle.cycleLength - (user.averageCycleLength || 28)) <= 3 ? styles.regularTag : styles.irregularTag]}>
+              <Text style={[styles.statusTagText, cycle.cycleLength && Math.abs(cycle.cycleLength - (user.averageCycleLength || 28)) <= 3 ? styles.regularTagText : styles.irregularTagText]}>
+                {cycle.isActive ? 'Active Cycle' : cycle.cycleLength && Math.abs(cycle.cycleLength - (user.averageCycleLength || 28)) <= 3 ? 'Regular' : 'Variation Detected'}
               </Text>
             </View>
           </View>
 
           <View style={styles.historyDetailsRow}>
             <Text style={styles.historyMetric}>
-              Length: <Text style={styles.historyMetricVal}>{cycle.cycleLength ? `${cycle.cycleLength} days` : 'Active (+6d)'}</Text>
+              Length: <Text style={styles.historyMetricVal}>{cycle.cycleLength ? `${cycle.cycleLength} days` : `Day ${currentCycleDayNumber}`}</Text>
             </Text>
             {cycle.periodLength && (
               <Text style={styles.historyMetric}>

@@ -10,6 +10,9 @@ import CyclePage from './pages/CyclePage';
 import SymptomsPage from './pages/SymptomsPage';
 import LifestylePage from './pages/LifestylePage';
 import InsightsPage from './pages/InsightsPage';
+import AssistantPage from './pages/AssistantPage';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   return (
@@ -30,9 +33,9 @@ export default function App() {
           <Route path="/symptoms" element={<SymptomsPage />} />
           <Route path="/lifestyle" element={<LifestylePage />} />
           <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/assistant" element={<InsightsPage />} />
-          <Route path="/reports" element={<InsightsPage />} />
-          <Route path="/settings" element={<InsightsPage />} />
+          <Route path="/assistant" element={<AssistantPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
 
         {/* Fallback */}
@@ -41,4 +44,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

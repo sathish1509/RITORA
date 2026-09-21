@@ -1,5 +1,10 @@
+import { useState, useEffect } from 'react';
 import TopNav from '../components/layout/TopNav';
-import { mockInsights, mockRiskIndicators, mockPredictions, currentCycleDay, mockUser } from '../data/mockData';
+import { insightService } from '../services/insightService';
+import { cycleService } from '../services/cycleService';
+import { authService } from '../services/authService';
+import { mockInsights, mockRiskIndicators, mockPredictions, currentCycleDay as fallbackCycleDay, mockUser } from '../data/mockData';
+import type { HealthInsight, RiskIndicator, Prediction, Cycle, User } from '../types';
 import { AlertTriangle, Brain, Moon, Droplets, TrendingUp, ShieldAlert, Sparkles, BatteryLow, Info } from 'lucide-react';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -11,11 +16,49 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 export default function InsightsPage() {
-  const mainInsight = mockInsights[0];
+  const [insights, setInsights] = useState<HealthInsight[]>(mockInsights);
+  const [riskIndicators, setRiskIndicators] = useState<RiskIndicator[]>(mockRiskIndicators);
+  const [predictions, setPredictions] = useState<Prediction[]>(mockPredictions);
+  const [currentCycle, setCurrentCycle] = useState<Cycle | null>(null);
+  const [user, setUser] = useState<User>(mockUser);
+
+  useEffect(() => {
+    loadInsightsData();
+  }, []);
+
+  const loadInsightsData = async () => {
+    try {
+      const [fetchedInsights, fetchedRisks, fetchedPreds, activeCycle, currentUser] = await Promise.all([
+        insightService.getInsights(),
+        insightService.getRiskIndicators(),
+        insightService.getPredictions(),
+        cycleService.getCurrentCycle(),
+        authService.getCurrentUser(),
+      ]);
+      if (fetchedInsights.length > 0) setInsights(fetchedInsights);
+      if (fetchedRisks.length > 0) setRiskIndicators(fetchedRisks);
+      if (fetchedPreds.length > 0) setPredictions(fetchedPreds);
+      if (activeCycle) setCurrentCycle(activeCycle);
+      if (currentUser) setUser(currentUser);
+    } catch (err) {
+      console.error('Failed to load live insights', err);
+    }
+  };
+
+  const currentCycleDayNumber = (() => {
+    if (!currentCycle) return fallbackCycleDay;
+    const start = new Date(currentCycle.startDate);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
+    return Math.max(1, diff);
+  })();
+
+  const mainInsight = insights[0] || mockInsights[0];
+  const deviation = currentCycleDayNumber - (user.averageCycleLength || 28);
 
   return (
     <div className="min-h-screen">
-      <TopNav title="Health Insights" subtitle="AI-powered analysis of your health patterns" />
+      <TopNav title="Health Insights" subtitle="AI-powered analysis of your health patterns & clinical correlations" />
 
       <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto stagger-children">
         {/* Main Insight Hero */}
@@ -34,15 +77,17 @@ export default function InsightsPage() {
               <div className="grid grid-cols-3 gap-4 mt-6">
                 <div className="bg-white/10 rounded-xl p-4">
                   <p className="text-xs text-white/60">Current Cycle</p>
-                  <p className="text-2xl font-bold">{currentCycleDay} days</p>
+                  <p className="text-2xl font-bold">{currentCycleDayNumber} days</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-4">
-                  <p className="text-xs text-white/60">Personal Average</p>
-                  <p className="text-2xl font-bold">{mockUser.averageCycleLength} days</p>
+                  <p className="text-xs text-white/60">Personal Baseline</p>
+                  <p className="text-2xl font-bold">{user.averageCycleLength || 28} days</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-4">
                   <p className="text-xs text-white/60">Deviation</p>
-                  <p className="text-2xl font-bold text-amber">+{currentCycleDay - mockUser.averageCycleLength} days</p>
+                  <p className="text-2xl font-bold text-amber">
+                    {deviation >= 0 ? `+${deviation}` : deviation} days
+                  </p>
                 </div>
               </div>
             </div>
@@ -51,7 +96,7 @@ export default function InsightsPage() {
 
         {/* Insights Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-          {mockInsights.slice(1).map((insight) => {
+          {insights.slice(1).map((insight) => {
             const Icon = iconMap[insight.icon || ''] || Info;
             return (
               <div key={insight.id} className="bg-white rounded-2xl border border-lilac/30 p-6 hover:shadow-lg hover:shadow-plum/5 transition-all">
@@ -84,7 +129,7 @@ export default function InsightsPage() {
           Health Awareness Indicators
         </h3>
         <div className="space-y-4 mb-6">
-          {mockRiskIndicators.map((risk) => (
+          {riskIndicators.map((risk) => (
             <div key={risk.id} className="bg-white rounded-2xl border border-amber/20 p-6">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center">
@@ -114,7 +159,7 @@ export default function InsightsPage() {
           Predictions
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {mockPredictions.map((pred) => (
+          {predictions.map((pred) => (
             <div key={pred.id} className="bg-white rounded-2xl border border-lilac/30 p-6">
               <p className="text-sm text-charcoal/50 font-medium mb-1">Next Period Prediction</p>
               <p className="text-2xl font-bold text-charcoal">
