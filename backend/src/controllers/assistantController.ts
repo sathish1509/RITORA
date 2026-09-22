@@ -51,6 +51,13 @@ export async function chat(req: AuthRequest, res: Response): Promise<void> {
     },
   });
 
+  const formattedAssistantMsg = {
+    id: assistantMsg.id,
+    role: assistantMsg.role,
+    content: assistantMsg.content,
+    timestamp: assistantMsg.createdAt.toISOString(),
+  };
+
   res.status(201).json({
     userMessage: {
       id: userMsg.id,
@@ -58,11 +65,7 @@ export async function chat(req: AuthRequest, res: Response): Promise<void> {
       content: userMsg.content,
       timestamp: userMsg.createdAt.toISOString(),
     },
-    reply: {
-      id: assistantMsg.id,
-      role: assistantMsg.role,
-      content: assistantMsg.content,
-      timestamp: assistantMsg.createdAt.toISOString(),
-    },
+    assistantMessage: formattedAssistantMsg,
+    reply: formattedAssistantMsg,
   });
 }

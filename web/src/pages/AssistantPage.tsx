@@ -74,7 +74,10 @@ export default function AssistantPage() {
 
     try {
       const res = await assistantService.sendMessage(textToSend);
-      setMessages((prev) => [...prev, res.assistantMessage]);
+      const replyMsg = res?.assistantMessage || (res as any)?.reply;
+      if (replyMsg) {
+        setMessages((prev) => [...prev, replyMsg]);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -120,10 +123,10 @@ export default function AssistantPage() {
         <div className="flex-1 bg-white rounded-3xl border border-lilac/30 p-6 flex flex-col shadow-sm min-h-[450px]">
           {/* Messages Stream */}
           <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 max-h-[500px]">
-            {messages.map((msg) => {
+            {messages.filter(Boolean).map((msg) => {
               const isUser = msg.role === 'user';
               return (
-                <div key={msg.id} className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                <div key={msg.id || `msg_${Math.random()}`} className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
                   {!isUser && (
                     <div className="w-8 h-8 rounded-xl gradient-plum flex items-center justify-center shrink-0 shadow-sm shadow-plum/20">
                       <Bot className="w-4 h-4 text-white" />
@@ -139,7 +142,7 @@ export default function AssistantPage() {
                   >
                     <p className="whitespace-pre-line">{msg.content}</p>
                     <p className={`text-[10px] mt-1.5 ${isUser ? 'text-white/70 text-right' : 'text-charcoal/40'}`}>
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                     </p>
                   </div>
 
