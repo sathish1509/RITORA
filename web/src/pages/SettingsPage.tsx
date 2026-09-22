@@ -24,11 +24,13 @@ export default function SettingsPage() {
   const loadUser = async () => {
     try {
       const u = await authService.getCurrentUser();
-      setUser(u);
-      setName(u.name || '');
-      setAge(u.age || 26);
-      setCycleLength(u.averageCycleLength || 28);
-      setPeriodDuration(u.averagePeriodDuration || 5);
+      if (u) {
+        setUser(u);
+        setName(u.name || '');
+        setAge(u.age || 26);
+        setCycleLength(u.averageCycleLength || 28);
+        setPeriodDuration(u.averagePeriodDuration || 5);
+      }
     } catch (err) {
       console.error(err);
     }

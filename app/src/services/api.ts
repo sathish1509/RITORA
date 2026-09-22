@@ -8,7 +8,7 @@ const BASE_URL = Platform.select({
   default: 'http://localhost:3001/api',
 });
 
-let authToken = 'mock-jwt-token-ritora';
+let authToken = '';
 
 export const setMobileToken = (token: string) => {
   authToken = token;

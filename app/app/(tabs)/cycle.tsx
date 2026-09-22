@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, RefreshControl } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { mobileHealthService } from '@/src/services';
-import { mockCycles, mockUser, currentCycleDay as fallbackCycleDay } from '@/src/data/mockData';
 
 export default function CycleScreen() {
-  const [cycles, setCycles] = useState<any[]>(mockCycles);
+  const [cycles, setCycles] = useState<any[]>([]);
   const [currentCycle, setCurrentCycle] = useState<any>(null);
-  const [user, setUser] = useState<any>(mockUser);
+  const [user, setUser] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadCycles = async () => {
@@ -17,7 +16,7 @@ export default function CycleScreen() {
         mobileHealthService.getCurrentCycle(),
         mobileHealthService.getCurrentUser(),
       ]);
-      if (fetchedCycles?.length) setCycles(fetchedCycles);
+      if (fetchedCycles) setCycles(fetchedCycles);
       if (activeCycle) setCurrentCycle(activeCycle);
       if (currentUser) setUser(currentUser);
     } catch (err) {
@@ -36,7 +35,7 @@ export default function CycleScreen() {
   };
 
   const currentCycleDayNumber = (() => {
-    if (!currentCycle?.startDate) return fallbackCycleDay;
+    if (!currentCycle?.startDate) return 1;
     const start = new Date(currentCycle.startDate);
     const now = new Date();
     const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
@@ -59,12 +58,12 @@ export default function CycleScreen() {
           </View>
           <View style={styles.divider} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{user.averageCycleLength || 28}d</Text>
+            <Text style={styles.statNumber}>{user?.averageCycleLength || 28}d</Text>
             <Text style={styles.statLabel}>Avg Length</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{user.averagePeriodLength || user.averagePeriodDuration || 5}d</Text>
+            <Text style={styles.statNumber}>{user?.averagePeriodLength || user?.averagePeriodDuration || 5}d</Text>
             <Text style={styles.statLabel}>Avg Period</Text>
           </View>
         </View>
@@ -78,9 +77,9 @@ export default function CycleScreen() {
         <View key={cycle.id} style={styles.historyCard}>
           <View style={styles.historyCardHeader}>
             <Text style={styles.historyDate}>Started {new Date(cycle.startDate).toLocaleDateString()}</Text>
-            <View style={[styles.statusTag, cycle.cycleLength && Math.abs(cycle.cycleLength - (user.averageCycleLength || 28)) <= 3 ? styles.regularTag : styles.irregularTag]}>
-              <Text style={[styles.statusTagText, cycle.cycleLength && Math.abs(cycle.cycleLength - (user.averageCycleLength || 28)) <= 3 ? styles.regularTagText : styles.irregularTagText]}>
-                {cycle.isActive ? 'Active Cycle' : cycle.cycleLength && Math.abs(cycle.cycleLength - (user.averageCycleLength || 28)) <= 3 ? 'Regular' : 'Variation Detected'}
+            <View style={[styles.statusTag, cycle.cycleLength && Math.abs(cycle.cycleLength - (user?.averageCycleLength || 28)) <= 3 ? styles.regularTag : styles.irregularTag]}>
+              <Text style={[styles.statusTagText, cycle.cycleLength && Math.abs(cycle.cycleLength - (user?.averageCycleLength || 28)) <= 3 ? styles.regularTagText : styles.irregularTagText]}>
+                {cycle.isActive ? 'Active Cycle' : cycle.cycleLength && Math.abs(cycle.cycleLength - (user?.averageCycleLength || 28)) <= 3 ? 'Regular' : 'Variation Detected'}
               </Text>
             </View>
           </View>

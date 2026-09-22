@@ -1,23 +1,13 @@
 import { apiClient } from './api';
-import { mockLifestyle } from '../data/mockData';
 import type { LifestyleEntry, StressLevel, MoodLevel } from '../types';
 
 export const lifestyleService = {
   async getLifestyle(): Promise<LifestyleEntry[]> {
-    try {
-      const entries = await apiClient.get<LifestyleEntry[]>('/lifestyle');
-      return entries.length > 0 ? entries : mockLifestyle;
-    } catch {
-      return mockLifestyle;
-    }
+    return await apiClient.get<LifestyleEntry[]>('/lifestyle');
   },
 
   async getLifestyleByDate(date: string): Promise<LifestyleEntry | null> {
-    try {
-      return await apiClient.get<LifestyleEntry>(`/lifestyle/by-date/${date}`);
-    } catch {
-      return mockLifestyle.find((l) => l.date === date) || null;
-    }
+    return await apiClient.get<LifestyleEntry | null>(`/lifestyle/by-date/${date}`);
   },
 
   async createLifestyleEntry(data: {
@@ -29,10 +19,6 @@ export const lifestyleService = {
     mood: MoodLevel;
     notes?: string;
   }): Promise<LifestyleEntry> {
-    try {
-      return await apiClient.post<LifestyleEntry>('/lifestyle', data);
-    } catch {
-      return { id: `lf_${Date.now()}`, ...data };
-    }
+    return await apiClient.post<LifestyleEntry>('/lifestyle', data);
   },
 };

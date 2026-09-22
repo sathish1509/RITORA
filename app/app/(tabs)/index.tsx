@@ -2,20 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { mobileHealthService } from '@/src/services';
-import {
-  mockUser,
-  currentCycleDay as fallbackCycleDay,
-  mockInsights,
-  mockRiskIndicators,
-  mockPredictions,
-} from '@/src/data/mockData';
 
 export default function HomeScreen() {
-  const [user, setUser] = useState(mockUser);
+  const [user, setUser] = useState<any>(null);
   const [currentCycle, setCurrentCycle] = useState<any>(null);
-  const [insights, setInsights] = useState<any[]>(mockInsights);
-  const [riskIndicators, setRiskIndicators] = useState<any[]>(mockRiskIndicators);
-  const [predictions, setPredictions] = useState<any[]>(mockPredictions);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [riskIndicators, setRiskIndicators] = useState<any[]>([]);
+  const [predictions, setPredictions] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = async () => {
@@ -49,17 +42,21 @@ export default function HomeScreen() {
   };
 
   const currentCycleDayNumber = (() => {
-    if (!currentCycle?.startDate) return fallbackCycleDay;
+    if (!currentCycle?.startDate) return 1;
     const start = new Date(currentCycle.startDate);
     const now = new Date();
     const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
     return Math.max(1, diff);
   })();
 
-  const insight = insights[0] || mockInsights[0];
-  const risk = riskIndicators[0] || mockRiskIndicators[0];
-  const prediction = predictions[0] || mockPredictions[0];
-  const deviation = currentCycleDayNumber - (user.averageCycleLength || 28);
+  const insight = insights[0] || {
+    title: 'Cycle Health Intelligence',
+    description: `Your cycle is currently on Day ${currentCycleDayNumber} of your ${user?.averageCycleLength || 28}-day baseline rhythm.`,
+    actionableStep: 'Keep logging daily symptoms to refine AI pattern detection.',
+  };
+  const risk = riskIndicators[0];
+  const prediction = predictions[0];
+  const deviation = currentCycleDayNumber - (user?.averageCycleLength || 28);
 
   return (
     <ScrollView
@@ -70,7 +67,7 @@ export default function HomeScreen() {
       {/* Greeting */}
       <View style={styles.greetingHeader}>
         <Text style={styles.greetingSub}>Good morning,</Text>
-        <Text style={styles.greetingTitle}>{user.name} 👋</Text>
+        <Text style={styles.greetingTitle}>{user?.name || 'Friend'} 👋</Text>
       </View>
 
       {/* Cycle Progress Card */}
@@ -78,7 +75,7 @@ export default function HomeScreen() {
         <View style={styles.cycleCardHeader}>
           <Text style={styles.cycleCardLabel}>CURRENT CYCLE</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Active</Text>
+            <Text style={styles.badgeText}>{currentCycle?.isActive ? 'Active' : 'On Track'}</Text>
           </View>
         </View>
 
@@ -93,11 +90,17 @@ export default function HomeScreen() {
               {deviation >= 4 ? 'Cycle Delayed' : 'On Track'}
             </Text>
             <Text style={styles.cycleDeviationText}>
-              {deviation >= 0 ? `+${deviation} days from ${user.averageCycleLength}d avg` : `${deviation} days`}
+              {deviation >= 0 ? `+${deviation} days from ${user?.averageCycleLength || 28}d avg` : `${deviation} days`}
             </Text>
-            <Text style={styles.cyclePredictionText}>
-              Next period: ~{prediction.predictedDate} ({prediction.confidence}% confidence)
-            </Text>
+            {prediction ? (
+              <Text style={styles.cyclePredictionText}>
+                Next period: ~{prediction.predictedDate} ({prediction.confidence}% confidence)
+              </Text>
+            ) : (
+              <Text style={styles.cyclePredictionText}>
+                Syncing prediction parameters...
+              </Text>
+            )}
           </View>
         </View>
       </View>
@@ -136,17 +139,21 @@ export default function HomeScreen() {
       </View>
 
       {/* Health Awareness Indicator */}
-      <Text style={styles.sectionHeader}>Health Awareness</Text>
-      <View style={styles.riskCard}>
-        <View style={styles.riskHeader}>
-          <Text style={styles.riskTitle}>{risk.type}</Text>
-          <View style={styles.riskBadge}>
-            <Text style={styles.riskBadgeText}>{risk.level.toUpperCase()}</Text>
+      {risk && (
+        <>
+          <Text style={styles.sectionHeader}>Health Awareness</Text>
+          <View style={styles.riskCard}>
+            <View style={styles.riskHeader}>
+              <Text style={styles.riskTitle}>{risk.type}</Text>
+              <View style={styles.riskBadge}>
+                <Text style={styles.riskBadgeText}>{(risk.level || 'INFO').toUpperCase()}</Text>
+              </View>
+            </View>
+            <Text style={styles.riskDesc}>{risk.explanation}</Text>
+            <Text style={styles.disclaimerText}>{risk.disclaimer}</Text>
           </View>
-        </View>
-        <Text style={styles.riskDesc}>{risk.explanation}</Text>
-        <Text style={styles.disclaimerText}>{risk.disclaimer}</Text>
-      </View>
+        </>
+      )}
     </ScrollView>
   );
 }

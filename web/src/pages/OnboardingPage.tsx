@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, CalendarHeart, Moon, Activity, Sparkles } from 'lucide-react';
+import { authService } from '../services/authService';
 
 const steps = [
   {
@@ -218,8 +219,16 @@ export default function OnboardingPage() {
             )}
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (isLast) {
+                  try {
+                    await authService.updateProfile({
+                      averageCycleLength: Number(cycleLength),
+                      averagePeriodDuration: Number(periodDuration),
+                    });
+                  } catch (err) {
+                    console.warn('Profile sync failed during onboarding', err);
+                  }
                   navigate('/dashboard');
                 } else {
                   setStep(step + 1);

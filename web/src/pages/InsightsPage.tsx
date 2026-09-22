@@ -3,7 +3,7 @@ import TopNav from '../components/layout/TopNav';
 import { insightService } from '../services/insightService';
 import { cycleService } from '../services/cycleService';
 import { authService } from '../services/authService';
-import { mockInsights, mockRiskIndicators, mockPredictions, currentCycleDay as fallbackCycleDay, mockUser } from '../data/mockData';
+import { getStoredUser } from '../services/api';
 import type { HealthInsight, RiskIndicator, Prediction, Cycle, User } from '../types';
 import { AlertTriangle, Brain, Moon, Droplets, TrendingUp, ShieldAlert, Sparkles, BatteryLow, Info } from 'lucide-react';
 
@@ -16,11 +16,11 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 export default function InsightsPage() {
-  const [insights, setInsights] = useState<HealthInsight[]>(mockInsights);
-  const [riskIndicators, setRiskIndicators] = useState<RiskIndicator[]>(mockRiskIndicators);
-  const [predictions, setPredictions] = useState<Prediction[]>(mockPredictions);
+  const [insights, setInsights] = useState<HealthInsight[]>([]);
+  const [riskIndicators, setRiskIndicators] = useState<RiskIndicator[]>([]);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [currentCycle, setCurrentCycle] = useState<Cycle | null>(null);
-  const [user, setUser] = useState<User>(mockUser);
+  const [user, setUser] = useState<User | null>(getStoredUser());
 
   useEffect(() => {
     loadInsightsData();
@@ -29,15 +29,15 @@ export default function InsightsPage() {
   const loadInsightsData = async () => {
     try {
       const [fetchedInsights, fetchedRisks, fetchedPreds, activeCycle, currentUser] = await Promise.all([
-        insightService.getInsights(),
-        insightService.getRiskIndicators(),
-        insightService.getPredictions(),
-        cycleService.getCurrentCycle(),
-        authService.getCurrentUser(),
+        insightService.getInsights().catch(() => []),
+        insightService.getRiskIndicators().catch(() => []),
+        insightService.getPredictions().catch(() => []),
+        cycleService.getCurrentCycle().catch(() => null),
+        authService.getCurrentUser().catch(() => null),
       ]);
-      if (fetchedInsights.length > 0) setInsights(fetchedInsights);
-      if (fetchedRisks.length > 0) setRiskIndicators(fetchedRisks);
-      if (fetchedPreds.length > 0) setPredictions(fetchedPreds);
+      setInsights(fetchedInsights);
+      setRiskIndicators(fetchedRisks);
+      setPredictions(fetchedPreds);
       if (activeCycle) setCurrentCycle(activeCycle);
       if (currentUser) setUser(currentUser);
     } catch (err) {
@@ -46,15 +46,21 @@ export default function InsightsPage() {
   };
 
   const currentCycleDayNumber = (() => {
-    if (!currentCycle) return fallbackCycleDay;
+    if (!currentCycle) return 1;
     const start = new Date(currentCycle.startDate);
     const now = new Date();
     const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
     return Math.max(1, diff);
   })();
 
-  const mainInsight = insights[0] || mockInsights[0];
-  const deviation = currentCycleDayNumber - (user.averageCycleLength || 28);
+  const mainInsight = insights[0] || {
+    id: 'default_insight',
+    title: 'Cycle Health Intelligence',
+    description: `Your cycle is currently on Day ${currentCycleDayNumber} of your ${user?.averageCycleLength || 28}-day baseline rhythm.`,
+    severity: 'info',
+    category: 'health-awareness',
+  };
+  const deviation = currentCycleDayNumber - (user?.averageCycleLength || 28);
 
   return (
     <div className="min-h-screen">
@@ -81,7 +87,7 @@ export default function InsightsPage() {
                 </div>
                 <div className="bg-white/10 rounded-xl p-4">
                   <p className="text-xs text-white/60">Personal Baseline</p>
-                  <p className="text-2xl font-bold">{user.averageCycleLength || 28} days</p>
+                  <p className="text-2xl font-bold">{user?.averageCycleLength || 28} days</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-4">
                   <p className="text-xs text-white/60">Deviation</p>

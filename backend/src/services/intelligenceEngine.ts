@@ -39,16 +39,27 @@ export async function analyzeUserHealth(userId: string): Promise<{
   const insights: HealthInsightResponse[] = [];
   const riskIndicators: RiskIndicatorResponse[] = [];
 
-  // 1. Pattern Change / Anomaly Detection
+  // 1. Pattern Change / Regular Cycle Status
   if (deviation >= 4) {
     insights.push({
       id: 'ins_pattern_01',
       title: 'Pattern Change Detected',
-      description: `Your current cycle is at day ${currentCycleDay}, which is ${deviation} days longer than your personal average of ${user.averageCycleLength} days. Recent changes in sleep, stress, and symptoms are also visible in your recent records. This could be related to elevated stress levels and reduced sleep over the past week.`,
+      description: `Your current cycle is at day ${currentCycleDay}, which is ${deviation} days longer than your personal average of ${user.averageCycleLength} days. Recent lifestyle factors and symptom intensity may correlate with this pattern shift.`,
       severity: 'warning',
       category: 'pattern-change',
       icon: 'alert-triangle',
       actionableStep: 'Consider practicing 10 minutes of evening mindfulness and maintaining a consistent bedtime.',
+      createdAt: todayStr,
+    });
+  } else {
+    insights.push({
+      id: 'ins_pattern_normal',
+      title: 'Cycle Rhythm on Track',
+      description: `Your cycle is currently on Day ${currentCycleDay} of your ${user.averageCycleLength}-day baseline. Your cycle length is progressing within expected standard parameters.`,
+      severity: 'info',
+      category: 'health-awareness',
+      icon: 'brain',
+      actionableStep: 'Keep tracking your daily symptoms and energy levels to refine future predictions.',
       createdAt: todayStr,
     });
   }
@@ -63,7 +74,7 @@ export async function analyzeUserHealth(userId: string): Promise<{
       insights.push({
         id: 'ins_sleep_01',
         title: 'Sleep & Cycle Correlation',
-        description: `Your average sleep over the last ${last7Lifestyle.length} days is ${avgSleep.toFixed(1)} hours, which is below the recommended 7-9 hours. Research shows that sleep deprivation can affect menstrual cycle regularity. Consider improving your sleep hygiene to support cycle health.`,
+        description: `Your average sleep over the last ${last7Lifestyle.length} days is ${avgSleep.toFixed(1)} hours, which is below the recommended 7-9 hours. Research shows that sleep deprivation can affect menstrual cycle regularity.`,
         severity: avgSleep < 5.5 ? 'warning' : 'info',
         category: 'lifestyle-correlation',
         icon: 'moon',
@@ -81,7 +92,7 @@ export async function analyzeUserHealth(userId: string): Promise<{
       insights.push({
         id: 'ins_stress_01',
         title: 'Stress Impact Analysis',
-        description: `Your stress levels have been elevated (high to very-high) for ${highStressDays} of the last ${last7Lifestyle.length} days. Chronic stress is associated with delayed ovulation and longer cycles. The current cycle extension may be partially attributed to this pattern.`,
+        description: `Your stress levels have been elevated (high to very-high) for ${highStressDays} of the last ${last7Lifestyle.length} days. Chronic stress is associated with delayed ovulation and cycle variations.`,
         severity: 'warning',
         category: 'lifestyle-correlation',
         icon: 'brain',
@@ -93,7 +104,7 @@ export async function analyzeUserHealth(userId: string): Promise<{
         id: 'risk_stress_01',
         type: 'Stress-Related Cycle Disruption',
         level: 'moderate',
-        explanation: `Prolonged high stress levels can affect your hypothalamic-pituitary-ovarian axis, potentially delaying ovulation and extending your cycle. Your current +${Math.max(1, deviation)} day deviation aligns with your elevated stress pattern.`,
+        explanation: `Prolonged high stress levels can affect your hypothalamic-pituitary-ovarian axis, potentially delaying ovulation and extending your cycle.`,
         disclaimer:
           'This is an awareness indicator, not a medical diagnosis. Please consult a healthcare provider for proper evaluation.',
       });
@@ -115,6 +126,18 @@ export async function analyzeUserHealth(userId: string): Promise<{
         createdAt: todayStr,
       });
     }
+  } else {
+    // Helpful starting guidance for new user
+    insights.push({
+      id: 'ins_lifestyle_start',
+      title: 'Daily Lifestyle Insights',
+      description: 'Log your sleep, water intake, stress, and exercise to discover personalized health correlations.',
+      severity: 'info',
+      category: 'lifestyle-correlation',
+      icon: 'moon',
+      actionableStep: 'Go to Lifestyle to log your first entry today.',
+      createdAt: todayStr,
+    });
   }
 
   // 5. Symptom Trends & Anemia Awareness
@@ -138,7 +161,7 @@ export async function analyzeUserHealth(userId: string): Promise<{
       type: 'Anemia Risk',
       level: 'moderate',
       explanation:
-        'Based on your reported heavy flow, fatigue, and reduced iron-rich food intake, there is a moderate awareness level for potential iron-deficiency anemia. Heavy menstrual bleeding is one of the most common causes of iron deficiency in premenopausal women.',
+        'Based on your reported heavy flow, fatigue, and reduced iron-rich food intake, there is a moderate awareness level for potential iron-deficiency anemia.',
       disclaimer:
         'This is an awareness indicator, not a medical diagnosis. Please consult a healthcare provider for proper evaluation.',
     });

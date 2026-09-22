@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, RefreshControl } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { mobileHealthService } from '@/src/services';
-import { mockInsights, mockRiskIndicators } from '@/src/data/mockData';
 
 export default function InsightsScreen() {
-  const [insights, setInsights] = useState<any[]>(mockInsights);
-  const [riskIndicators, setRiskIndicators] = useState<any[]>(mockRiskIndicators);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [riskIndicators, setRiskIndicators] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadInsights = async () => {
@@ -15,8 +14,8 @@ export default function InsightsScreen() {
         mobileHealthService.getInsights(),
         mobileHealthService.getRiskIndicators(),
       ]);
-      if (ins?.length) setInsights(ins);
-      if (risks?.length) setRiskIndicators(risks);
+      if (ins) setInsights(ins);
+      if (risks) setRiskIndicators(risks);
     } catch (err) {
       console.warn('Failed to load mobile insights', err);
     }

@@ -3,16 +3,16 @@ import TopNav from '../components/layout/TopNav';
 import { cycleService } from '../services/cycleService';
 import { insightService } from '../services/insightService';
 import { authService } from '../services/authService';
-import { mockCycles, currentCycleDay as fallbackCycleDay, mockPredictions, mockUser } from '../data/mockData';
+import { getStoredUser } from '../services/api';
 import type { Cycle, Prediction, User } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CyclePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [cycles, setCycles] = useState<Cycle[]>(mockCycles);
+  const [cycles, setCycles] = useState<Cycle[]>([]);
   const [currentCycle, setCurrentCycle] = useState<Cycle | null>(null);
-  const [prediction, setPrediction] = useState<Prediction>(mockPredictions[0]);
-  const [user, setUser] = useState<User>(mockUser);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [user, setUser] = useState<User | null>(getStoredUser());
 
   useEffect(() => {
     loadData();
@@ -21,14 +21,14 @@ export default function CyclePage() {
   const loadData = async () => {
     try {
       const [fetchedCycles, activeCycle, preds, currentUser] = await Promise.all([
-        cycleService.getCycles(),
-        cycleService.getCurrentCycle(),
-        insightService.getPredictions(),
-        authService.getCurrentUser(),
+        cycleService.getCycles().catch(() => []),
+        cycleService.getCurrentCycle().catch(() => null),
+        insightService.getPredictions().catch(() => []),
+        authService.getCurrentUser().catch(() => null),
       ]);
-      if (fetchedCycles.length > 0) setCycles(fetchedCycles);
+      setCycles(fetchedCycles);
       if (activeCycle) setCurrentCycle(activeCycle);
-      if (preds.length > 0) setPrediction(preds[0]);
+      if (preds && preds.length > 0) setPrediction(preds[0]);
       if (currentUser) setUser(currentUser);
     } catch (err) {
       console.error('Failed to load cycle data', err);
@@ -36,7 +36,7 @@ export default function CyclePage() {
   };
 
   const currentCycleDayNumber = (() => {
-    if (!currentCycle) return fallbackCycleDay;
+    if (!currentCycle) return 1;
     const start = new Date(currentCycle.startDate);
     const now = new Date();
     const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
@@ -63,9 +63,11 @@ export default function CyclePage() {
         return 'past';
       }
     }
-    const predDate = new Date(prediction.predictedDate);
-    const check = new Date(dateStr);
-    if (Math.abs(check.getTime() - predDate.getTime()) < 3 * 86400000) return 'predicted';
+    if (prediction?.predictedDate) {
+      const predDate = new Date(prediction.predictedDate);
+      const check = new Date(dateStr);
+      if (Math.abs(check.getTime() - predDate.getTime()) < 3 * 86400000) return 'predicted';
+    }
     return null;
   };
 
@@ -158,25 +160,34 @@ export default function CyclePage() {
               </div>
               <div className="flex justify-between mt-2 text-xs text-white/50">
                 <span>Day 1</span>
-                <span>Avg: {user.averageCycleLength}d</span>
+                <span>Avg: {user?.averageCycleLength || 28}d</span>
                 <span>Day {currentCycleDayNumber}</span>
               </div>
             </div>
 
             {/* Prediction */}
-            <div className="bg-white rounded-2xl border border-lilac/30 p-5">
-              <p className="text-sm text-charcoal/50 font-medium">Next Period Prediction</p>
-              <p className="text-2xl font-bold text-charcoal mt-1">
-                {new Date(prediction.predictedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex-1 bg-lilac/30 rounded-full h-1.5">
-                  <div className="h-1.5 rounded-full bg-lavender" style={{ width: `${prediction.confidence}%` }} />
+            {prediction ? (
+              <div className="bg-white rounded-2xl border border-lilac/30 p-5">
+                <p className="text-sm text-charcoal/50 font-medium">Next Period Prediction</p>
+                <p className="text-2xl font-bold text-charcoal mt-1">
+                  {new Date(prediction.predictedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 bg-lilac/30 rounded-full h-1.5">
+                    <div className="h-1.5 rounded-full bg-lavender" style={{ width: `${prediction.confidence}%` }} />
+                  </div>
+                  <span className="text-xs text-charcoal/50">{prediction.confidence}%</span>
                 </div>
-                <span className="text-xs text-charcoal/50">{prediction.confidence}%</span>
+                <p className="text-xs text-charcoal/40 mt-2">{prediction.basedOn}</p>
               </div>
-              <p className="text-xs text-charcoal/40 mt-2">{prediction.basedOn}</p>
-            </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-lilac/30 p-5">
+                <p className="text-sm text-charcoal/50 font-medium">Next Period Prediction</p>
+                <p className="text-sm text-charcoal/60 mt-2">
+                  Tracking in progress — log cycles and symptoms to generate dynamic predictions.
+                </p>
+              </div>
+            )}
 
             {/* Previous Cycles */}
             <div className="bg-white rounded-2xl border border-lilac/30 p-5">

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Colors } from '@/src/constants/theme';
 import { mobileHealthService } from '@/src/services';
-import { mockUser } from '@/src/data/mockData';
 
 export default function ProfileScreen() {
-  const [user, setUser] = useState<any>(mockUser);
+  const [user, setUser] = useState<any>(null);
 
   const loadUser = async () => {
     try {
@@ -29,10 +28,10 @@ export default function ProfileScreen() {
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>{(user.name || 'S')[0]}</Text>
+          <Text style={styles.avatarText}>{(user?.name || 'U')[0]}</Text>
         </View>
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <Text style={styles.name}>{user?.name || 'User Profile'}</Text>
+        <Text style={styles.email}>{user?.email || 'Synchronizing with backend...'}</Text>
       </View>
 
       {/* Cycle Settings */}
@@ -40,12 +39,12 @@ export default function ProfileScreen() {
       <View style={styles.settingCard}>
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Average Cycle Length</Text>
-          <Text style={styles.settingVal}>{user.averageCycleLength || 28} days</Text>
+          <Text style={styles.settingVal}>{user?.averageCycleLength || 28} days</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Average Period Duration</Text>
-          <Text style={styles.settingVal}>{user.averagePeriodLength || user.averagePeriodDuration || 5} days</Text>
+          <Text style={styles.settingVal}>{user?.averagePeriodLength || user?.averagePeriodDuration || 5} days</Text>
         </View>
       </View>
 
