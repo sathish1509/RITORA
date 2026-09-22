@@ -1,18 +1,37 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Colors } from '@/src/constants/theme';
-import { mockUser } from '@/src/data/mockData';
+import { mobileHealthService } from '@/src/services';
 
 export default function ProfileScreen() {
+  const [user, setUser] = useState<any>(null);
+
+  const loadUser = async () => {
+    try {
+      const u = await mobileHealthService.getCurrentUser();
+      if (u) setUser(u);
+    } catch (err) {
+      console.warn('Failed to load user in mobile', err);
+    }
+  };
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const handleLogout = () => {
+    Alert.alert('Signed Out', 'You have been logged out of your session.');
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>{mockUser.name[0]}</Text>
+          <Text style={styles.avatarText}>{(user?.name || 'U')[0]}</Text>
         </View>
-        <Text style={styles.name}>{mockUser.name}</Text>
-        <Text style={styles.email}>{mockUser.email}</Text>
+        <Text style={styles.name}>{user?.name || 'User Profile'}</Text>
+        <Text style={styles.email}>{user?.email || 'Synchronizing with backend...'}</Text>
       </View>
 
       {/* Cycle Settings */}
@@ -20,12 +39,12 @@ export default function ProfileScreen() {
       <View style={styles.settingCard}>
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Average Cycle Length</Text>
-          <Text style={styles.settingVal}>{mockUser.averageCycleLength} days</Text>
+          <Text style={styles.settingVal}>{user?.averageCycleLength || 28} days</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>Average Period Duration</Text>
-          <Text style={styles.settingVal}>{mockUser.averagePeriodLength} days</Text>
+          <Text style={styles.settingVal}>{user?.averagePeriodLength || user?.averagePeriodDuration || 5} days</Text>
         </View>
       </View>
 
@@ -43,7 +62,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
     </ScrollView>

@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TopNav from '../components/layout/TopNav';
-import { mockSymptoms } from '../data/mockData';
-import type { SymptomType } from '../types';
+import { symptomService } from '../services/symptomService';
+import type { Symptom, SymptomType } from '../types';
 import { Plus, X } from 'lucide-react';
 
 const symptomOptions: { type: SymptomType; emoji: string; label: string }[] = [
@@ -23,26 +23,47 @@ export default function SymptomsPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedType, setSelectedType] = useState<SymptomType | null>(null);
   const [severity, setSeverity] = useState(3);
-  const [symptoms, setSymptoms] = useState(mockSymptoms);
+  const [notes, setNotes] = useState('');
+  const [symptoms, setSymptoms] = useState<Symptom[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleLog = () => {
+  useEffect(() => {
+    loadSymptoms();
+  }, []);
+
+  const loadSymptoms = async () => {
+    try {
+      const data = await symptomService.getSymptoms();
+      setSymptoms(data);
+    } catch (err) {
+      console.error('Failed to load symptoms', err);
+    }
+  };
+
+  const handleLog = async () => {
     if (!selectedType) return;
-    setSymptoms([
-      {
-        id: `sym_${Date.now()}`,
+    setLoading(true);
+    try {
+      const created = await symptomService.createSymptom({
         type: selectedType,
         severity: severity as 1 | 2 | 3 | 4 | 5,
         date: new Date().toISOString().split('T')[0],
-      },
-      ...symptoms,
-    ]);
-    setShowModal(false);
-    setSelectedType(null);
-    setSeverity(3);
+        notes: notes.trim() || undefined,
+      });
+      setSymptoms((prev) => [created, ...prev]);
+      setShowModal(false);
+      setSelectedType(null);
+      setSeverity(3);
+      setNotes('');
+    } catch (err) {
+      console.error('Failed to log symptom', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Group symptoms by date
-  const grouped = symptoms.reduce<Record<string, typeof symptoms>>((acc, s) => {
+  const grouped = symptoms.reduce<Record<string, Symptom[]>>((acc, s) => {
     const d = new Date(s.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     if (!acc[d]) acc[d] = [];
     acc[d].push(s);
@@ -53,7 +74,7 @@ export default function SymptomsPage() {
 
   return (
     <div className="min-h-screen">
-      <TopNav title="Symptoms" subtitle="Track and monitor your symptoms" />
+      <TopNav title="Symptoms" subtitle="Track and monitor your symptoms with live clinical insights" />
 
       <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
         {/* Log Button */}
@@ -86,13 +107,14 @@ export default function SymptomsPage() {
                             <div className="flex gap-1 mt-1">
                               {[1, 2, 3, 4, 5].map((i) => (
                                 <div
-                                  key={i}
+                                   key={i}
                                   className={`w-4 h-1.5 rounded-full ${
                                     i <= s.severity ? 'bg-plum' : 'bg-lilac/30'
                                   }`}
                                 />
                               ))}
                             </div>
+                            {s.notes && <p className="text-xs text-charcoal/50 mt-1 italic">{s.notes}</p>}
                           </div>
                         </div>
                         <span className="text-xs text-charcoal/30">
@@ -146,15 +168,26 @@ export default function SymptomsPage() {
                   max={5}
                   value={severity}
                   onChange={(e) => setSeverity(Number(e.target.value))}
-                  className="w-full h-2 bg-lilac/30 rounded-lg appearance-none cursor-pointer accent-plum mb-6"
+                  className="w-full h-2 bg-lilac/30 rounded-lg appearance-none cursor-pointer accent-plum mb-4"
                 />
+
+                <div className="mb-6">
+                  <label className="block text-xs font-semibold text-charcoal/60 mb-1.5">Optional notes</label>
+                  <input
+                    type="text"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. onset after morning workout"
+                    className="w-full px-3.5 py-2 rounded-xl bg-lilac/10 border border-lilac/30 text-charcoal text-xs focus:outline-none focus:ring-2 focus:ring-lavender"
+                  />
+                </div>
 
                 <button
                   onClick={handleLog}
-                  disabled={!selectedType}
+                  disabled={!selectedType || loading}
                   className="w-full py-3 rounded-xl gradient-plum text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
                 >
-                  Log Symptom
+                  {loading ? 'Saving...' : 'Log Symptom'}
                 </button>
               </div>
             </div>

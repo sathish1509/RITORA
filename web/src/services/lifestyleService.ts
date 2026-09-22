@@ -1,16 +1,13 @@
-import { delay } from './api';
-import { mockLifestyle } from '../data/mockData';
+import { apiClient } from './api';
 import type { LifestyleEntry, StressLevel, MoodLevel } from '../types';
 
 export const lifestyleService = {
   async getLifestyle(): Promise<LifestyleEntry[]> {
-    await delay();
-    return mockLifestyle;
+    return await apiClient.get<LifestyleEntry[]>('/lifestyle');
   },
 
   async getLifestyleByDate(date: string): Promise<LifestyleEntry | null> {
-    await delay();
-    return mockLifestyle.find((l) => l.date === date) || null;
+    return await apiClient.get<LifestyleEntry | null>(`/lifestyle/by-date/${date}`);
   },
 
   async createLifestyleEntry(data: {
@@ -22,7 +19,6 @@ export const lifestyleService = {
     mood: MoodLevel;
     notes?: string;
   }): Promise<LifestyleEntry> {
-    await delay(400);
-    return { id: `lf_${Date.now()}`, ...data };
+    return await apiClient.post<LifestyleEntry>('/lifestyle', data);
   },
 };

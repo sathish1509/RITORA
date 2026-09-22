@@ -1,17 +1,50 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, RefreshControl } from 'react-native';
 import { Colors } from '@/src/constants/theme';
-import { mockInsights, mockRiskIndicators } from '@/src/data/mockData';
+import { mobileHealthService } from '@/src/services';
 
 export default function InsightsScreen() {
+  const [insights, setInsights] = useState<any[]>([]);
+  const [riskIndicators, setRiskIndicators] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadInsights = async () => {
+    try {
+      const [ins, risks] = await Promise.all([
+        mobileHealthService.getInsights(),
+        mobileHealthService.getRiskIndicators(),
+      ]);
+      if (ins) setInsights(ins);
+      if (risks) setRiskIndicators(risks);
+    } catch (err) {
+      console.warn('Failed to load mobile insights', err);
+    }
+  };
+
+  useEffect(() => {
+    loadInsights();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadInsights();
+    setRefreshing(false);
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.plum} />}
+    >
       <Text style={styles.sectionHeader}>Pattern Analysis</Text>
       
-      {mockInsights.map((insight) => (
+      {insights.map((insight) => (
         <View key={insight.id} style={styles.card}>
           <View style={styles.cardTag}>
-            <Text style={styles.cardTagText}>ANOMALY DETECTED</Text>
+            <Text style={styles.cardTagText}>
+              {insight.severity === 'warning' ? 'PATTERN VARIATION' : 'RITORA INTELLIGENCE'}
+            </Text>
           </View>
           <Text style={styles.cardTitle}>{insight.title}</Text>
           <Text style={styles.cardDesc}>{insight.description}</Text>
@@ -25,7 +58,7 @@ export default function InsightsScreen() {
       ))}
 
       <Text style={styles.sectionHeader}>Health Awareness</Text>
-      {mockRiskIndicators.map((risk) => (
+      {riskIndicators.map((risk) => (
         <View key={risk.id} style={styles.riskCard}>
           <Text style={styles.riskTitle}>{risk.type}</Text>
           <Text style={styles.riskDesc}>{risk.explanation}</Text>

@@ -1,20 +1,20 @@
-import { delay } from './api';
-import { mockInsights, mockRiskIndicators, mockPredictions } from '../data/mockData';
-import type { HealthInsight, RiskIndicator, Prediction } from '../types';
+import { apiClient } from './api';
+import type { HealthInsight, RiskIndicator, Prediction, DashboardData } from '../types';
 
 export const insightService = {
   async getInsights(): Promise<HealthInsight[]> {
-    await delay();
-    return mockInsights;
+    return await apiClient.get<HealthInsight[]>('/insights');
   },
 
   async getRiskIndicators(): Promise<RiskIndicator[]> {
-    await delay();
-    return mockRiskIndicators;
+    return await apiClient.get<RiskIndicator[]>('/insights/risks');
   },
 
   async getPredictions(): Promise<Prediction[]> {
-    await delay();
-    return mockPredictions;
+    return await apiClient.get<Prediction[]>('/insights/predictions');
+  },
+
+  async getDashboard(): Promise<DashboardData | null> {
+    return await apiClient.get<DashboardData>('/dashboard');
   },
 };

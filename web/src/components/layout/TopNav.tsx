@@ -1,12 +1,37 @@
+import { useState, useEffect } from 'react';
 import { Bell, Search } from 'lucide-react';
-import { mockUser } from '../../data/mockData';
+import { getStoredUser, getToken } from '../../services/api';
+import { authService } from '../../services/authService';
+import type { User } from '../../types';
 
 interface TopNavProps {
   title: string;
   subtitle?: string;
+  user?: User | null;
 }
 
-export default function TopNav({ title, subtitle }: TopNavProps) {
+export default function TopNav({ title, subtitle, user: propUser }: TopNavProps) {
+  const [currentUser, setCurrentUser] = useState<User | null>(propUser || getStoredUser());
+
+  useEffect(() => {
+    if (propUser) {
+      setCurrentUser(propUser);
+      return;
+    }
+
+    if (getToken()) {
+      authService.getCurrentUser().then((u) => {
+        if (u) setCurrentUser(u);
+      }).catch(() => {
+        setCurrentUser(getStoredUser());
+      });
+    }
+  }, [propUser]);
+
+  const displayName = currentUser?.name || 'User';
+  const displayEmail = currentUser?.email || 'Logged in';
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <header className="sticky top-0 z-30 bg-ivory/80 backdrop-blur-lg border-b border-lilac/40 w-full">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-4">
@@ -37,11 +62,11 @@ export default function TopNav({ title, subtitle }: TopNavProps) {
           {/* Profile */}
           <div className="flex items-center gap-3 pl-4 border-l border-lilac/40">
             <div className="w-9 h-9 rounded-full gradient-plum flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">{mockUser.name[0]}</span>
+              <span className="text-white text-sm font-semibold">{initial}</span>
             </div>
             <div className="hidden lg:block">
-              <p className="text-sm font-semibold text-charcoal">{mockUser.name}</p>
-              <p className="text-xs text-charcoal/50">{mockUser.email}</p>
+              <p className="text-sm font-semibold text-charcoal">{displayName}</p>
+              <p className="text-xs text-charcoal/50">{displayEmail}</p>
             </div>
           </div>
         </div>

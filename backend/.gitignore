@@ -6,6 +6,7 @@ node_modules/
 # Build Output
 dist/
 build/
+*.tsbuildinfo
 
 # Local Environment & Secrets
 .env
@@ -14,18 +15,27 @@ build/
 *.env
 !*.env.example
 
-# SQLite Databases & Logs
+# SQLite Databases & Local Storage
 prisma/*.db
 prisma/*.db-journal
+*.db
+*.db-journal
 *.sqlite
 *.sqlite3
 
 # Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+pnpm-debug.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
 
 # Editor & OS
 .DS_Store
@@ -37,3 +47,4 @@ Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
+*.sw?

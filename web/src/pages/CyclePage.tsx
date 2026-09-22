@@ -1,11 +1,47 @@
+import { useState, useEffect } from 'react';
 import TopNav from '../components/layout/TopNav';
-import { mockCycles, currentCycleDay, mockPredictions, mockUser } from '../data/mockData';
+import { cycleService } from '../services/cycleService';
+import { insightService } from '../services/insightService';
+import { authService } from '../services/authService';
+import { getStoredUser } from '../services/api';
+import type { Cycle, Prediction, User } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
 
 export default function CyclePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const prediction = mockPredictions[0];
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [currentCycle, setCurrentCycle] = useState<Cycle | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [user, setUser] = useState<User | null>(getStoredUser());
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [fetchedCycles, activeCycle, preds, currentUser] = await Promise.all([
+        cycleService.getCycles().catch(() => []),
+        cycleService.getCurrentCycle().catch(() => null),
+        insightService.getPredictions().catch(() => []),
+        authService.getCurrentUser().catch(() => null),
+      ]);
+      setCycles(fetchedCycles);
+      if (activeCycle) setCurrentCycle(activeCycle);
+      if (preds && preds.length > 0) setPrediction(preds[0]);
+      if (currentUser) setUser(currentUser);
+    } catch (err) {
+      console.error('Failed to load cycle data', err);
+    }
+  };
+
+  const currentCycleDayNumber = (() => {
+    if (!currentCycle) return 1;
+    const start = new Date(currentCycle.startDate);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
+    return Math.max(1, diff);
+  })();
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -18,7 +54,7 @@ export default function CyclePage() {
   // Mark cycle days on calendar
   const getCycleDayType = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    for (const cycle of mockCycles) {
+    for (const cycle of cycles) {
       const start = new Date(cycle.startDate);
       const end = cycle.endDate ? new Date(cycle.endDate) : new Date();
       const check = new Date(dateStr);
@@ -27,9 +63,11 @@ export default function CyclePage() {
         return 'past';
       }
     }
-    const predDate = new Date(prediction.predictedDate);
-    const check = new Date(dateStr);
-    if (Math.abs(check.getTime() - predDate.getTime()) < 3 * 86400000) return 'predicted';
+    if (prediction?.predictedDate) {
+      const predDate = new Date(prediction.predictedDate);
+      const check = new Date(dateStr);
+      if (Math.abs(check.getTime() - predDate.getTime()) < 3 * 86400000) return 'predicted';
+    }
     return null;
   };
 
@@ -39,7 +77,7 @@ export default function CyclePage() {
 
   return (
     <div className="min-h-screen">
-      <TopNav title="Cycle Tracking" subtitle="Monitor your menstrual cycle patterns" />
+      <TopNav title="Cycle Tracking" subtitle="Monitor your menstrual cycle patterns and predictions" />
 
       <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -116,42 +154,51 @@ export default function CyclePage() {
             {/* Current Cycle */}
             <div className="bg-gradient-to-br from-plum to-plum-light rounded-2xl p-5 text-white shadow-lg shadow-plum/20">
               <p className="text-sm text-white/70 font-medium">Current Cycle</p>
-              <p className="text-4xl font-bold mt-1">Day {currentCycleDay}</p>
+              <p className="text-4xl font-bold mt-1">Day {currentCycleDayNumber}</p>
               <div className="mt-4 w-full bg-white/20 rounded-full h-2">
-                <div className="h-2 rounded-full bg-amber" style={{ width: `${Math.min((currentCycleDay / 40) * 100, 100)}%` }} />
+                <div className="h-2 rounded-full bg-amber" style={{ width: `${Math.min((currentCycleDayNumber / 40) * 100, 100)}%` }} />
               </div>
               <div className="flex justify-between mt-2 text-xs text-white/50">
                 <span>Day 1</span>
-                <span>Avg: {mockUser.averageCycleLength}</span>
-                <span>Day {currentCycleDay}</span>
+                <span>Avg: {user?.averageCycleLength || 28}d</span>
+                <span>Day {currentCycleDayNumber}</span>
               </div>
             </div>
 
             {/* Prediction */}
-            <div className="bg-white rounded-2xl border border-lilac/30 p-5">
-              <p className="text-sm text-charcoal/50 font-medium">Next Period Prediction</p>
-              <p className="text-2xl font-bold text-charcoal mt-1">
-                {new Date(prediction.predictedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex-1 bg-lilac/30 rounded-full h-1.5">
-                  <div className="h-1.5 rounded-full bg-lavender" style={{ width: `${prediction.confidence}%` }} />
+            {prediction ? (
+              <div className="bg-white rounded-2xl border border-lilac/30 p-5">
+                <p className="text-sm text-charcoal/50 font-medium">Next Period Prediction</p>
+                <p className="text-2xl font-bold text-charcoal mt-1">
+                  {new Date(prediction.predictedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 bg-lilac/30 rounded-full h-1.5">
+                    <div className="h-1.5 rounded-full bg-lavender" style={{ width: `${prediction.confidence}%` }} />
+                  </div>
+                  <span className="text-xs text-charcoal/50">{prediction.confidence}%</span>
                 </div>
-                <span className="text-xs text-charcoal/50">{prediction.confidence}%</span>
+                <p className="text-xs text-charcoal/40 mt-2">{prediction.basedOn}</p>
               </div>
-              <p className="text-xs text-charcoal/40 mt-2">{prediction.basedOn}</p>
-            </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-lilac/30 p-5">
+                <p className="text-sm text-charcoal/50 font-medium">Next Period Prediction</p>
+                <p className="text-sm text-charcoal/60 mt-2">
+                  Tracking in progress — log cycles and symptoms to generate dynamic predictions.
+                </p>
+              </div>
+            )}
 
             {/* Previous Cycles */}
             <div className="bg-white rounded-2xl border border-lilac/30 p-5">
               <p className="text-sm font-semibold text-charcoal mb-3">Previous Cycles</p>
               <div className="space-y-2">
-                {mockCycles.filter((c) => !c.isActive).map((cycle) => (
+                {cycles.filter((c) => !c.isActive).slice(0, 5).map((cycle) => (
                   <div key={cycle.id} className="flex items-center justify-between p-3 rounded-xl bg-ivory">
                     <span className="text-sm text-charcoal/60">
                       {new Date(cycle.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
-                    <span className="text-sm font-semibold text-charcoal">{cycle.cycleLength} days</span>
+                    <span className="text-sm font-semibold text-charcoal">{cycle.cycleLength || 28} days</span>
                   </div>
                 ))}
               </div>
