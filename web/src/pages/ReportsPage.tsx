@@ -45,11 +45,13 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen">
-      <TopNav title="Clinical Health Reports" subtitle="Synthesized cycle & symptom intelligence for your healthcare provider" />
+      <div className="no-print">
+        <TopNav title="Clinical Health Reports" subtitle="Synthesized cycle & symptom intelligence for your healthcare provider" />
+      </div>
 
-      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto">
+      <div className="p-6 lg:p-8 max-w-7xl w-full mx-auto print-full-width">
         {/* Actions bar */}
-        <div className="bg-white rounded-3xl border border-lilac/30 p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="no-print bg-white rounded-3xl border border-lilac/30 p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
           <div>
             <h3 className="text-base font-bold text-charcoal flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-plum" />
@@ -88,9 +90,9 @@ export default function ReportsPage() {
         </div>
 
         {/* Reports Split Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print-full-width">
           {/* Reports Sidebar */}
-          <div className="lg:col-span-4 space-y-3">
+          <div className="lg:col-span-4 space-y-3 no-print">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-charcoal/40 px-1">
               Generated Reports ({reports.length})
             </h4>
@@ -123,13 +125,34 @@ export default function ReportsPage() {
           </div>
 
           {/* Report Detail View */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 print-full-width">
             {selectedReport ? (
-              <div className="bg-white rounded-3xl border border-lilac/30 p-8 shadow-sm print:shadow-none print:border-none">
+              <div className="bg-white rounded-3xl border border-lilac/30 p-8 shadow-sm printable-report-card">
+                {/* Print-Only Ritora Clinical Branding Header */}
+                <div className="hidden print-only items-center justify-between pb-6 mb-6 border-b border-gray-300">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-plum flex items-center justify-center text-white font-bold text-lg">
+                      R
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-charcoal tracking-wide">RITORA</h2>
+                      <p className="text-xs text-charcoal/60">Menstrual Health Intelligence • Clinical Record</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-plum bg-lilac px-2.5 py-1 rounded-md">
+                      {selectedReport.type} Report
+                    </span>
+                    <p className="text-[11px] text-charcoal/50 mt-1">
+                      ID: #{selectedReport.id.slice(0, 8)}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-lilac/20 gap-4 mb-6">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <FileText className="w-5 h-5 text-plum" />
+                      <FileText className="w-5 h-5 text-plum print-hide" />
                       <h3 className="text-xl font-bold text-charcoal">{selectedReport.title}</h3>
                     </div>
                     <p className="text-xs text-charcoal/50">
@@ -139,7 +162,7 @@ export default function ReportsPage() {
 
                   <button
                     onClick={handlePrint}
-                    className="px-4 py-2 rounded-xl bg-lilac/20 hover:bg-lilac/30 text-charcoal font-medium text-xs flex items-center gap-2 transition-colors self-start sm:self-auto"
+                    className="no-print px-4 py-2 rounded-xl bg-lilac/20 hover:bg-lilac/30 text-charcoal font-medium text-xs flex items-center gap-2 transition-colors self-start sm:self-auto"
                   >
                     <Download className="w-4 h-4 text-plum" />
                     <span>Print / Save PDF</span>
@@ -196,9 +219,17 @@ export default function ReportsPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Print Footer / Clinical Disclaimer */}
+                <div className="hidden print-only pt-6 mt-6 border-t border-gray-300 text-[11px] text-charcoal/60 text-center">
+                  <p className="font-semibold">RITORA Health Intelligence • Confidential Clinical Summary</p>
+                  <p className="text-[10px] text-charcoal/40 mt-0.5">
+                    This document summarizes user-logged biometric and symptom patterns for healthcare provider review and does not constitute a medical diagnosis.
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="bg-white rounded-3xl border border-lilac/30 p-12 text-center text-charcoal/40">
+              <div className="bg-white rounded-3xl border border-lilac/30 p-12 text-center text-charcoal/40 no-print">
                 <FileText className="w-12 h-12 mx-auto mb-3 opacity-40 text-plum" />
                 <p className="text-sm font-semibold">Select or generate a report to view details</p>
               </div>
