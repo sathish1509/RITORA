@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  ritora-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ritora-platform
+    restart: always
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    volumes:
+      - ritora-data:/app/backend/prisma
+
+volumes:
+  ritora-data:
