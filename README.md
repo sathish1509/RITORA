@@ -37,6 +37,8 @@
 - [API Data Model & Architecture](#-api-data-model--architecture)
 - [Design System & UI Guidelines](#-design-system--ui-guidelines)
 - [Privacy, Data Governance & Security](#-privacy-data-governance--security)
+- [Developer Setup Guide](file:///f:/RITORA/SETUP_GUIDE.md)
+
 
 ---
 
