@@ -70,19 +70,19 @@ export default function LandingPage() {
             <div className="relative bg-white rounded-2xl shadow-xl border border-[#EDE4F5] p-6 sm:p-8">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
                 <div className="bg-[#EDE4F5]/40 rounded-xl p-5 border border-[#EDE4F5]">
-                  <p className="text-xs font-semibold text-[#4A245E]/70 uppercase tracking-wider">Current Cycle</p>
-                  <p className="text-3xl font-extrabold text-[#4A245E] mt-1">Day 35</p>
-                  <p className="text-xs font-semibold text-[#D4A54E] mt-1.5">+6 days from average</p>
+                  <p className="text-xs font-semibold text-[#4A245E]/70 uppercase tracking-wider">AI CYCLE INSIGHTS</p>
+                  <p className="text-lg font-bold text-[#4A245E] mt-1">Smart Predictions</p>
+                  <p className="text-xs font-semibold text-[#6B3A80] mt-1.5">Learns your unique rhythm</p>
                 </div>
                 <div className="bg-[#EDE4F5]/40 rounded-xl p-5 border border-[#EDE4F5]">
-                  <p className="text-xs font-semibold text-[#4A245E]/70 uppercase tracking-wider">Pattern Detected</p>
-                  <p className="text-lg font-bold text-[#24212A] mt-1">Cycle Extension</p>
-                  <p className="text-xs text-[#24212A]/60 mt-1">Stress-correlated deviation</p>
+                  <p className="text-xs font-semibold text-[#4A245E]/70 uppercase tracking-wider">PATTERN DETECTION</p>
+                  <p className="text-lg font-bold text-[#24212A] mt-1">Lifestyle Correlation</p>
+                  <p className="text-xs text-[#24212A]/60 mt-1">Stress & symptom tracking</p>
                 </div>
                 <div className="bg-[#A8C3B0]/20 rounded-xl p-5 border border-[#8FB39A]/30">
-                  <p className="text-xs font-semibold text-[#8FB39A] uppercase tracking-wider">Health Insight</p>
-                  <p className="text-lg font-bold text-[#24212A] mt-1">Awareness Active</p>
-                  <p className="text-xs text-[#24212A]/60 mt-1">2 indicators identified</p>
+                  <p className="text-xs font-semibold text-[#8FB39A] uppercase tracking-wider">HEALTH REPORTS</p>
+                  <p className="text-lg font-bold text-[#24212A] mt-1">Exportable Summaries</p>
+                  <p className="text-xs text-[#24212A]/60 mt-1">Ready for doctor consultation</p>
                 </div>
               </div>
             </div>
