@@ -342,7 +342,6 @@ RITORA detects Sarah's cycle deviation (+6 days) alongside reported symptoms (he
 
 ## 🔒 Privacy, Data Governance & Security
 
-- **Strict Data Confidentiality**: Personal health logs are stored securely with encrypted database fields.
 - **Medical Disclaimer**: RITORA is an informational and health intelligence tool designed for wellness self-awareness. It does not provide formal medical diagnoses and is intended to complement, not replace, professional healthcare advice.
 - **JWT Session Security**: Client interactions use secure JSON Web Token authentication with expiration enforcement.
 
