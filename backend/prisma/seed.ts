@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { fetchUserHealthSnapshot, evaluateUserHealthSnapshot, generateHealthSummaryReport } from '../src/ai';
 
 const prisma = new PrismaClient();
 
@@ -296,33 +297,20 @@ async function main() {
   });
 
   // 8. Create Reports
-  await prisma.report.create({
-    data: {
-      userId: user.id,
-      title: 'Monthly Health Summary — August 2026',
-      type: 'monthly',
-      summary: 'This month showed a significant deviation in cycle length. Lifestyle factors including sleep quality and stress levels had notable correlations with cycle irregularity.',
-      dataJson: JSON.stringify({
-        cycleCount: 1,
-        averageCycleLength: 29,
-        longestCycle: 35,
-        shortestCycle: 28,
-        commonSymptoms: [
-          { type: 'fatigue', count: 8 },
-          { type: 'cramps', count: 6 },
-          { type: 'bloating', count: 4 },
-          { type: 'headache', count: 3 },
-          { type: 'mood-swings', count: 3 },
-        ],
-        lifestyleAverages: {
-          sleep: 5.8,
-          stress: 'moderate-high',
-          hydration: 1.9,
-          exercise: 28,
-        },
-      }),
-    },
-  });
+  const snapshot = await fetchUserHealthSnapshot(user.id);
+  if (snapshot) {
+    const pipeline = evaluateUserHealthSnapshot(snapshot);
+    const compiled = generateHealthSummaryReport(snapshot, pipeline, 'monthly');
+    await prisma.report.create({
+      data: {
+        userId: user.id,
+        title: compiled.title,
+        type: compiled.type,
+        summary: compiled.summary,
+        dataJson: JSON.stringify(compiled.data),
+      },
+    });
+  }
 
   // 9. Create Chat Messages
   const messages = [

@@ -39,11 +39,11 @@ export function evaluateUserHealthSnapshot(snapshot: UserHealthSnapshot): AIPipe
   const prediction = predictCycleWindow(snapshot.cycles, baseline);
   const pattern = detectCyclePatterns(snapshot.cycles, baseline);
   const whatChanged = analyzeWhatChanged(snapshot, baseline);
-  const symptomAnalysis = analyzeSymptomPatterns(snapshot.symptoms);
+  const symptomAnalysis = analyzeSymptomPatterns(snapshot.symptoms, snapshot.cycles);
   const lifestyleAnalysis = analyzeLifestylePatterns(snapshot.lifestyle);
-  const riskScreening = screenHealthRisks(snapshot);
-  const evidence = buildExplainabilityEvidence(snapshot, baseline, pattern);
-  const insights = generateHealthInsights(pattern, lifestyleAnalysis, evidence);
+  const riskScreening = screenHealthRisks(snapshot, baseline, symptomAnalysis, lifestyleAnalysis, pattern);
+  const evidence = buildExplainabilityEvidence(snapshot, baseline, pattern, whatChanged, symptomAnalysis, lifestyleAnalysis, riskScreening);
+  const insights = generateHealthInsights(pattern, lifestyleAnalysis, evidence, whatChanged, riskScreening, baseline, symptomAnalysis);
   const recommendations = generateRecommendations(lifestyleAnalysis, pattern);
   const alerts = evaluateSmartAlerts(pattern, evidence);
 

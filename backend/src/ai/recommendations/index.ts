@@ -1,8 +1,9 @@
 import { RecommendationItem, LifestyleAnalysisResult, PatternResult } from '../types';
 
 /**
- * Recommendations Engine Stub
- * To be implemented by AI engineer: Generates evidence-based, actionable lifestyle and cycle guidance.
+ * Recommendations Engine
+ * Generates evidence-based, actionable lifestyle and cycle guidance
+ * based on real-time AI pipeline output (sleep deficit, stress, hydration analysis).
  */
 export function generateRecommendations(
   lifestyle: LifestyleAnalysisResult,

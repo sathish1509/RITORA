@@ -107,16 +107,78 @@ export interface Report {
 
 export interface ReportData {
   cycleCount: number;
+  completedCyclesCount?: number;
   averageCycleLength: number;
   longestCycle: number;
   shortestCycle: number;
-  commonSymptoms: { type: SymptomType; count: number }[];
+  currentCycleDay?: number;
+  deviationDays?: number;
+  cyclePhase?: string;
+  cycleStatus?: string;
+  activeCycle?: {
+    currentCycleDay: number;
+    deviationDays: number;
+    phase: string;
+    phaseDescription?: string;
+    status: string;
+    isDelayed?: boolean;
+    isEarly?: boolean;
+  };
+  commonSymptoms: {
+    type: SymptomType | string;
+    count: number;
+    averageSeverity?: number;
+    frequency?: number;
+    isIncreasing?: boolean;
+    trendDescription?: string;
+  }[];
   lifestyleAverages: {
     sleep: number;
     stress: string;
     hydration: number;
     exercise: number;
+    sleepDeficit?: boolean;
+    sleepDelta?: number;
+    highStressDays?: number;
+    isElevatedStress?: boolean;
   };
+  baseline?: {
+    meanCycleLength: number;
+    cycleLengthStdDev: number;
+    confidenceScore: number;
+    meanPeriodDuration?: number;
+    sampleSize?: number;
+  };
+  prediction?: {
+    predictedStartDate: string;
+    estimatedWindowStart: string;
+    estimatedWindowEnd: string;
+    confidence: number;
+    basedOn?: string;
+  };
+  whatChanged?: Array<{
+    category: string;
+    metricName: string;
+    baseline: string | number;
+    recent: string | number;
+    delta: string | number;
+    direction: string;
+    description?: string;
+  }>;
+  riskScreening?: Array<{
+    type: string;
+    level: string;
+    explanation: string;
+    disclaimer: string;
+    suggestedAction?: string;
+  }>;
+  recommendations?: Array<{
+    id?: string;
+    category: string;
+    title: string;
+    suggestion: string;
+    priority: string;
+  }>;
 }
 
 export interface DashboardData {

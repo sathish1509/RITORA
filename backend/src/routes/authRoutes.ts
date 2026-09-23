@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { register, login, getMe, updateProfile } from '../controllers/authController';
+import { register, login, getMe, updateProfile, submitOnboarding } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -13,5 +13,6 @@ router.post('/register', asyncHandler(register));
 router.post('/login', asyncHandler(login));
 router.get('/me', authenticateToken, asyncHandler(getMe));
 router.put('/profile', authenticateToken, asyncHandler(updateProfile));
+router.post('/onboarding', authenticateToken, asyncHandler(submitOnboarding));
 
 export default router;

@@ -32,8 +32,27 @@ export const authService = {
     }
   },
 
-  async updateProfile(data: Partial<User>): Promise<User> {
+  async updateProfile(data: Partial<User> & { sleep?: string | number; stress?: string; exercise?: string | number; lastPeriodStart?: string }): Promise<User> {
     const user = await apiClient.put<User>('/auth/profile', data);
+    setStoredUser(user);
+    return user;
+  },
+
+  async submitOnboarding(data: {
+    averageCycleLength: number;
+    averagePeriodDuration: number;
+    lastPeriodStart?: string;
+    sleep: string;
+    sleepHours?: number;
+    stress: string;
+    stressLevel?: string;
+    exercise: string;
+    exerciseFrequency?: string;
+    exerciseMinutes?: number;
+    goals?: string[];
+  }): Promise<User> {
+    const res = await apiClient.post<{ user: User }>('/auth/onboarding', data);
+    const user = (res as any)?.user || res;
     setStoredUser(user);
     return user;
   },

@@ -2,63 +2,94 @@ import { Response } from 'express';
 import { prisma } from '../config/db';
 import { AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
-import { analyzeUserHealth } from '../services/intelligenceEngine';
-import { predictNextPeriod } from '../services/predictionEngine';
+import { fetchUserHealthSnapshot, evaluateUserHealthSnapshot } from '../ai';
 
 function parseFlow(flowStr: string | null): string[] {
   if (!flowStr) return [];
   try {
-    return JSON.parse(flowStr);
+    const parsed = JSON.parse(flowStr);
+    return Array.isArray(parsed) ? parsed : [parsed];
   } catch {
-    return [];
+    return flowStr ? [flowStr] : [];
   }
 }
 
 export async function getInsights(req: AuthRequest, res: Response): Promise<void> {
   const userId = req.user!.id;
-  const analysis = await analyzeUserHealth(userId);
+  const snapshot = await fetchUserHealthSnapshot(userId);
+
+  if (!snapshot) {
+    res.json([]);
+    return;
+  }
+
+  const analysis = evaluateUserHealthSnapshot(snapshot);
   res.json(analysis.insights);
 }
 
 export async function getRisks(req: AuthRequest, res: Response): Promise<void> {
   const userId = req.user!.id;
-  const analysis = await analyzeUserHealth(userId);
-  res.json(analysis.riskIndicators);
+  const snapshot = await fetchUserHealthSnapshot(userId);
+
+  if (!snapshot) {
+    res.json([]);
+    return;
+  }
+
+  const analysis = evaluateUserHealthSnapshot(snapshot);
+  res.json(analysis.riskScreening);
 }
 
 export async function getPredictions(req: AuthRequest, res: Response): Promise<void> {
   const userId = req.user!.id;
-  const predictions = await predictNextPeriod(userId);
-  res.json(predictions);
+  const snapshot = await fetchUserHealthSnapshot(userId);
+
+  if (!snapshot) {
+    res.json([]);
+    return;
+  }
+
+  const analysis = evaluateUserHealthSnapshot(snapshot);
+  res.json([
+    {
+      id: 'pred_active',
+      predictedDate: analysis.prediction.predictedStartDate,
+      confidence: analysis.prediction.confidence,
+      basedOn: analysis.prediction.basedOn,
+      estimatedWindowStart: analysis.prediction.estimatedWindowStart,
+      estimatedWindowEnd: analysis.prediction.estimatedWindowEnd,
+    },
+  ]);
 }
 
 export async function getDashboard(req: AuthRequest, res: Response): Promise<void> {
   const userId = req.user!.id;
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      cycles: {
-        orderBy: { startDate: 'desc' },
-        include: { symptoms: true },
+  const [user, snapshot] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        cycles: {
+          orderBy: { startDate: 'desc' },
+          include: { symptoms: true },
+        },
+        symptoms: {
+          orderBy: { date: 'desc' },
+          take: 10,
+        },
+        lifestyleEntries: {
+          orderBy: { date: 'desc' },
+          take: 14,
+        },
       },
-      symptoms: {
-        orderBy: { date: 'desc' },
-        take: 5,
-      },
-      lifestyleEntries: {
-        orderBy: { date: 'desc' },
-        take: 7,
-      },
-    },
-  });
-
-  if (!user) throw new AppError('User not found', 404);
-
-  const [analysis, predictions] = await Promise.all([
-    analyzeUserHealth(userId),
-    predictNextPeriod(userId),
+    }),
+    fetchUserHealthSnapshot(userId),
   ]);
+
+  if (!user || !snapshot) throw new AppError('User not found', 404);
+
+  // Execute full modular AI intelligence pipeline
+  const pipeline = evaluateUserHealthSnapshot(snapshot);
 
   const activeCycle = user.cycles.find((c) => c.isActive) || user.cycles[0];
 
@@ -132,14 +163,26 @@ export async function getDashboard(req: AuthRequest, res: Response): Promise<voi
     createdAt: user.createdAt.toISOString(),
   };
 
+  const predictionFormatted = {
+    id: 'pred_active',
+    predictedDate: pipeline.prediction.predictedStartDate,
+    confidence: pipeline.prediction.confidence,
+    basedOn: pipeline.prediction.basedOn,
+    estimatedWindowStart: pipeline.prediction.estimatedWindowStart,
+    estimatedWindowEnd: pipeline.prediction.estimatedWindowEnd,
+  };
+
   res.json({
     user: userFormatted,
     currentCycle: currentCycleFormatted,
-    currentCycleDay: analysis.currentCycleDay,
-    deviation: analysis.deviation,
-    prediction: predictions[0] || null,
-    insights: analysis.insights,
-    riskIndicators: analysis.riskIndicators,
+    currentCycleDay: pipeline.pattern.currentCycleDay,
+    deviation: pipeline.pattern.deviationDays,
+    prediction: predictionFormatted,
+    insights: pipeline.insights,
+    riskIndicators: pipeline.riskScreening,
+    evidence: pipeline.evidence,
+    whatChanged: pipeline.whatChanged,
+    recommendations: pipeline.recommendations,
     recentSymptoms: recentSymptomsFormatted,
     lifestyleOverview: lifestyleOverviewFormatted,
     cycleHistory: cycleHistoryFormatted,

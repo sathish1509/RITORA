@@ -70,6 +70,8 @@ export interface PredictionResult {
   basedOn: string;
 }
 
+export type CyclePhase = 'MENSTRUAL' | 'FOLLICULAR' | 'OVULATION' | 'LUTEAL';
+
 export interface PatternResult {
   currentCycleDay: number;
   deviationDays: number;
@@ -77,6 +79,9 @@ export interface PatternResult {
   isEarly: boolean;
   status: 'REGULAR' | 'DELAYED' | 'EARLY' | 'IRREGULAR';
   summary: string;
+  phase?: CyclePhase;
+  phaseDescription?: string;
+  isVariabilityHigh?: boolean;
 }
 
 export interface WhatChangedMetric {
@@ -86,11 +91,14 @@ export interface WhatChangedMetric {
   recent: string | number;
   delta: string | number;
   direction: 'UP' | 'DOWN' | 'STABLE';
+  significance?: 'NORMAL' | 'NOTICEABLE' | 'SIGNIFICANT';
+  description?: string;
 }
 
 export interface WhatChangedResult {
   hasSignificantChanges: boolean;
   changes: WhatChangedMetric[];
+  summary?: string;
 }
 
 export interface SymptomTrendItem {
@@ -98,11 +106,16 @@ export interface SymptomTrendItem {
   frequency: number;
   averageSeverity: number;
   isIncreasing: boolean;
+  occurrences?: number;
+  cyclesAnalyzed?: number;
+  pattern?: 'recurring' | 'occasional' | 'isolated';
+  trendDescription?: string;
 }
 
 export interface SymptomAnalysisResult {
   topSymptoms: SymptomTrendItem[];
   highSeveritySymptoms: SymptomTrendItem[];
+  recurringSymptoms?: SymptomTrendItem[];
 }
 
 export interface LifestyleAnalysisResult {
@@ -112,7 +125,14 @@ export interface LifestyleAnalysisResult {
   isElevatedStress: boolean;
   avgHydration7Days: number;
   hydrationBelowTarget: boolean;
+  historicalAvgSleep?: number;
+  sleepDelta?: number;
+  historicalAvgHydration?: number;
+  hydrationDelta?: number;
+  historicalHighStressDays?: number;
+  stressDeltaDays?: number;
 }
+
 
 export interface RiskScreeningItem {
   id: string;
@@ -120,6 +140,8 @@ export interface RiskScreeningItem {
   level: 'low' | 'moderate' | 'high';
   explanation: string;
   disclaimer: string;
+  contributingFactors?: string[];
+  suggestedAction?: string;
 }
 
 export interface RecommendationItem {
@@ -149,6 +171,8 @@ export interface HealthInsightItem {
   actionableStep?: string;
   evidence?: EvidenceContract[];
   createdAt: string;
+  isPrimary?: boolean;
+  contributingFactors?: string[];
 }
 
 export interface AIPipelineOutput {

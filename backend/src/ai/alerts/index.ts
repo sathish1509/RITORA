@@ -1,8 +1,9 @@
 import { AlertItem, PatternResult, EvidenceContract } from '../types';
 
 /**
- * Smart Alerts Engine Stub
- * To be implemented by AI engineer: Non-alarmist smart alert evaluation.
+ * Smart Alerts Engine
+ * Non-alarmist evaluation of cycle deviation patterns.
+ * Fires MEDIUM-priority alert when current cycle exceeds baseline by 7+ days.
  */
 export function evaluateSmartAlerts(
   pattern: PatternResult,

@@ -196,7 +196,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="email"
-                value={user?.email || 'sarah@ritora.app'}
+                value={user?.email || ''}
                 disabled
                 className="w-full px-4 py-3 rounded-2xl bg-lilac/5 border border-lilac/20 text-charcoal/50 text-sm cursor-not-allowed"
               />
