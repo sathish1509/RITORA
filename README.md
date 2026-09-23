@@ -196,7 +196,3 @@ RITORA's visual interface is built around calm, therapeutic tones designed to lo
 - **JWT Session Security**: Client interactions use secure JSON Web Token authentication with expiration enforcement.
 
 ---
-
-## 📄 License
-
-Proprietary — Developed for Hackathon & Production Deployment. All rights reserved.
