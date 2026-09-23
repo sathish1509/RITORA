@@ -1,13 +1,40 @@
-# RITORA Backend
+# RITORA Backend API
 
-> This directory is reserved for the backend teammate.
+> Node.js + Express REST API with Prisma ORM, Supabase PostgreSQL, and Google Gemini AI integration.
 
-## Integration
+## Tech Stack
 
-The web and mobile frontends are pre-configured with a service abstraction layer. When the backend is ready:
+- **Framework**: Express.js + TypeScript (`tsx`)
+- **Database**: Supabase PostgreSQL (via Prisma ORM)
+- **AI Integration**: Google Generative AI (`@google/generative-ai` Gemini model)
+- **Authentication**: JWT (`jsonwebtoken` + `bcryptjs`)
 
-1. Set `VITE_API_BASE_URL` (web) and `EXPO_PUBLIC_API_BASE_URL` (mobile) to your API URL
-2. Replace mock implementations in `services/` with real API calls
-3. Match your API response format to the TypeScript interfaces in `src/types/index.ts`
+## Getting Started
 
-See the root [README.md](../README.md) for the full list of expected API endpoints.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Setup environment variables:
+   Copy `.env.example` to `.env` and fill in your Supabase connection strings and Gemini API Key:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Sync Prisma database schema:
+   ```bash
+   npx prisma db push
+   ```
+
+4. Seed the database with initial demo data:
+   ```bash
+   npm run prisma:seed
+   ```
+
+5. Run dev server:
+   ```bash
+   npm run dev
+   ```
+
+Server runs at `http://localhost:3001` (Health check: `http://localhost:3001/api/health`).
